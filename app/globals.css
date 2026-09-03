@@ -185,6 +185,14 @@ h1.titulo {
 .bloque[data-medalla='1'] { background: var(--ambar); }
 .bloque[data-jugado='no'] { background: #1A1F26; }
 
+/* Cada bloque enlaza a su ronda. Sin texto dentro, asi que lo unico que
+   hace falta es que se comporte como caja y que se note al apuntarlo. */
+a.bloque { display: block; text-decoration: none; }
+a.bloque:hover, a.bloque:focus-visible {
+  outline: 1px solid var(--texto);
+  outline-offset: 2px;
+}
+
 /* ---------- formulario ---------- */
 
 .tarjeta {

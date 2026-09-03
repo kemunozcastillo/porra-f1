@@ -13,16 +13,25 @@ type FilaF1 = {
   victorias: number; podios: number; rondas_en_puntos: number;
 };
 
+type FilaMedallero = {
+  participante: string; tipo: string;
+  oros: number; platas: number; bronces: number; cuartos: number; podios: number;
+};
+
+type Fila = FilaAcumulado | FilaF1 | FilaMedallero;
+
 export default async function Clasificacion({
   searchParams,
 }: { searchParams: Promise<{ tabla?: string }> }) {
   const { tabla } = await searchParams;
   const esF1 = tabla === 'f1';
+  const esMedallero = tabla === 'podios';
   const supabase = await clienteServidor();
 
-  const [acumulado, campeonato, { data: gps }, { data: posiciones }] = await Promise.all([
+  const [acumulado, campeonato, medallero, { data: gps }, { data: posiciones }] = await Promise.all([
     supabase.from('clasificacion').select('*'),
     supabase.from('campeonato_f1').select('*'),
+    supabase.from('medallero').select('*'),
     supabase.from('gps').select('id, ronda, nombre, slug, estado').order('ronda'),
     supabase.from('posiciones_gp').select('participante, gp_id, medalla'),
   ]);
@@ -30,32 +39,43 @@ export default async function Clasificacion({
   const medallaDe = new Map<string, number>();
   posiciones?.forEach((p) => medallaDe.set(`${p.participante}|${p.gp_id}`, p.medalla));
 
-  const filas = esF1
-    ? ((campeonato.data ?? []) as FilaF1[])
-    : ((acumulado.data ?? []) as FilaAcumulado[]);
+  const filas: Fila[] = esMedallero
+    ? ((medallero.data ?? []) as FilaMedallero[])
+    : esF1
+      ? ((campeonato.data ?? []) as FilaF1[])
+      : ((acumulado.data ?? []) as FilaAcumulado[]);
 
-  const valorDe = (f: FilaAcumulado | FilaF1) =>
-    esF1 ? (f as FilaF1).puntos : (f as FilaAcumulado).total;
+  const valorDe = (f: Fila) =>
+    esMedallero ? (f as FilaMedallero).oros
+    : esF1 ? (f as FilaF1).puntos
+    : (f as FilaAcumulado).total;
 
   const lider = filas.length ? valorDe(filas[0]) : 0;
   const disputadas = gps?.filter((g) => g.estado === 'finalizado').length ?? 0;
   const proximo = gps?.find((g) => g.estado === 'abierto') ?? gps?.find((g) => g.estado === 'proximo');
+  const slugDe = new Map(gps?.map((g) => [g.id, g.slug]) ?? []);
+
+  const titulo = esMedallero
+    ? <>El<br />medallero</>
+    : esF1 ? <>Campeonato<br />paralelo</> : <>La tabla<br />no miente</>;
+
+  const subtitulo = esMedallero
+    ? 'Criterio olímpico: manda quien más rondas ganó. Un oro vale más que cualquier cantidad de platas, y una plata más que cualquier cantidad de bronces. Si hay empate se baja a los cuartos puestos.'
+    : esF1
+      ? 'Puntos de F1 según tu posición en cada ronda: 25 al que gana el fin de semana, 18 al segundo, y así hasta el décimo. Ganar por un punto vale lo mismo que ganar por cuarenta.'
+      : 'Suma de todo lo que acertaste, más las medallas por ganar una ronda y el boost si lo quemaste.';
 
   return (
     <>
       <p className="rotulo">Temporada 2026 · {disputadas} rondas disputadas</p>
-      <h1 className="titulo">
-        {esF1 ? <>Campeonato<br />paralelo</> : <>La tabla<br />no miente</>}
-      </h1>
-      <p className="subtitulo">
-        {esF1
-          ? 'Puntos de F1 según tu posición en cada ronda: 25 al que gana el fin de semana, 18 al segundo, y así hasta el décimo. Ganar por un punto vale lo mismo que ganar por cuarenta.'
-          : 'Suma de todo lo que acertaste, más las medallas por ganar una ronda y el boost si lo quemaste.'}
-      </p>
+      <h1 className="titulo">{titulo}</h1>
+      <p className="subtitulo">{subtitulo}</p>
 
       <nav className="nav" style={{ marginBottom: 22 }}>
-        <a href="/" aria-current={!esF1 ? 'page' : undefined}>Acumulado</a>
+        <a href="/" aria-current={!esF1 && !esMedallero ? 'page' : undefined}>Acumulado</a>
         <a href="/?tabla=f1" aria-current={esF1 ? 'page' : undefined}>Puntos F1</a>
+        <a href="/?tabla=podios" aria-current={esMedallero ? 'page' : undefined}>Podios</a>
+        <a href="/gp">Por ronda</a>
       </nav>
 
       {filas.length === 0 ? (
@@ -70,18 +90,24 @@ export default async function Clasificacion({
                 {f.tipo !== 'humano' && <span className="etiqueta-ia">{f.tipo}</span>}
               </div>
               <div className="gap">
-                {esF1
-                  ? `${(f as FilaF1).victorias} vict · ${(f as FilaF1).podios} podios`
-                  : i === 0 ? 'líder' : `+${lider - valorDe(f)}`}
+                {esMedallero
+                  ? `${(f as FilaMedallero).platas} plata · ${(f as FilaMedallero).bronces} bronce · ${(f as FilaMedallero).cuartos} cuarto`
+                  : esF1
+                    ? `${(f as FilaF1).victorias} vict · ${(f as FilaF1).podios} podios`
+                    : i === 0 ? 'líder' : `+${lider - valorDe(f)}`}
               </div>
-              <div className="total">{valorDe(f)}</div>
-              <div className="tira" aria-hidden>
+              <div className="total">
+                {valorDe(f)}
+                {esMedallero && <span style={{ fontSize: 13, color: 'var(--tenue)' }}> oro</span>}
+              </div>
+              <div className="tira" aria-hidden={false}>
                 {gps?.map((g) => {
                   const m = medallaDe.get(`${f.participante}|${g.id}`);
                   return (
-                    <span
+                    <a
                       key={g.id}
                       className="bloque"
+                      href={`/gp/${slugDe.get(g.id)}`}
                       data-medalla={m ?? 0}
                       data-jugado={g.estado === 'finalizado' ? 'si' : 'no'}
                       title={`${g.nombre}${m ? ` · ${m === 3 ? '1º' : m === 2 ? '2º' : '3º'} de la ronda` : ''}`}
