@@ -216,6 +216,29 @@ from base b
 left join bonus bo on bo.participante = b.participante
 order by total desc;
 
+-- ---------- Permisos de rol ----------
+
+-- Supabase concede estos permisos por defecto sobre el esquema `public`,
+-- asi que normalmente sobran. Se dejan escritos porque un `drop schema
+-- public cascade` los borra, y entonces las tablas nacen sin permisos y
+-- PostgREST rechaza toda lectura con un 42501 antes de llegar a evaluar
+-- las politicas. Repetirlos es inocuo.
+--
+-- El permiso es amplio a proposito: quien restringe de verdad es RLS, que
+-- esta activo en todas las tablas de aqui abajo. Sin GRANT no hay acceso;
+-- con GRANT, el acceso lo decide la politica.
+
+grant usage on schema public to anon, authenticated, service_role;
+
+grant all on all tables    in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+grant all on all functions in schema public to anon, authenticated, service_role;
+
+-- Y lo mismo para lo que se cree despues de este punto.
+alter default privileges in schema public grant all on tables    to anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
+
 -- ---------- Seguridad (RLS) ----------
 
 alter table perfiles      enable row level security;
