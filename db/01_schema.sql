@@ -46,7 +46,7 @@ create table if not exists gps (
   sprint_qualy_at   timestamptz,
   sprint_carrera_at timestamptz,
   qualy_at          timestamptz,
-  carrera_at        timestamptz
+  carrera_at        timestamptz,
   unique (ronda)
 );
 
@@ -267,7 +267,7 @@ create policy "crear mi pronostico" on predicciones for insert with check (
   participante = mi_participante()
   and exists (
     select 1 from gps g
-    where g.id = gp_id
+    where g.id = predicciones.gp_id
       and now() < coalesce(g.carrera_at, g.cierra_at + interval '3 days')
   )
 );
@@ -276,7 +276,7 @@ create policy "editar mi pronostico" on predicciones for update using (
   participante = mi_participante()
   and exists (
     select 1 from gps g
-    where g.id = gp_id
+    where g.id = predicciones.gp_id
       and now() < coalesce(g.carrera_at, g.cierra_at + interval '3 days')
   )
 );
@@ -299,12 +299,12 @@ create policy "declarar comodin" on comodines for insert with check (
   participante = mi_participante()
   and exists (
     select 1 from gps g
-    where g.id = gp_id
+    where g.id = comodines.gp_id
       and now() < case
             -- A ciegas: antes de que arranque la FP1. Si el calendario no
             -- tiene cargada la FP1, no se puede declarar: mejor bloquear
             -- que dejar pasar uno fuera de plazo.
-            when tipo = 'boost_ciegas' then g.fp1_at
+            when comodines.tipo = 'boost_ciegas' then g.fp1_at
             else g.cierra_at
           end
   )
