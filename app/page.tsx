@@ -20,6 +20,30 @@ type FilaMedallero = {
 
 type Fila = FilaAcumulado | FilaF1 | FilaMedallero;
 
+/**
+ * Las medallas se leen en el mismo orden que las ordena: oro, plata,
+ * bronce y, como último desempate, cuartos puestos. Los colores son los
+ * de la tira de rondas, para que una fila y su tira se lean igual.
+ */
+function Medallas({ fila }: { fila: FilaMedallero }) {
+  const escalones = [
+    { n: fila.oros,    uno: 'oro',    varios: 'oros',    color: 'var(--violeta)' },
+    { n: fila.platas,  uno: 'plata',  varios: 'platas',  color: 'var(--verde)' },
+    { n: fila.bronces, uno: 'bronce', varios: 'bronces', color: 'var(--ambar)' },
+    { n: fila.cuartos, uno: 'cuarto', varios: 'cuartos', color: 'var(--tenue)' },
+  ];
+  return (
+    <>
+      {escalones.map((e, i) => (
+        <span key={e.uno} style={{ color: e.n ? e.color : '#4A5765' }}>
+          {i > 0 && <span style={{ color: '#39434E' }}> · </span>}
+          {e.n} {e.n === 1 ? e.uno : e.varios}
+        </span>
+      ))}
+    </>
+  );
+}
+
 export default async function Clasificacion({
   searchParams,
 }: { searchParams: Promise<{ tabla?: string }> }) {
@@ -91,7 +115,7 @@ export default async function Clasificacion({
               </div>
               <div className="gap">
                 {esMedallero
-                  ? `${(f as FilaMedallero).platas} plata · ${(f as FilaMedallero).bronces} bronce · ${(f as FilaMedallero).cuartos} cuarto`
+                  ? <Medallas fila={f as FilaMedallero} />
                   : esF1
                     ? `${(f as FilaF1).victorias} vict · ${(f as FilaF1).podios} podios`
                     : i === 0 ? 'líder' : `+${lider - valorDe(f)}`}
