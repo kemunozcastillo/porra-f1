@@ -1,0 +1,9 @@
+# Normaliza los finales de linea en el repositorio: LF siempre.
+# Sin esto git avisa en cada commit de la conversion CRLF en Windows.
+* text=auto eol=lf
+
+# Binarios y generados: que git no los toque ni los muestre en los diffs.
+*.png    binary
+*.jpg    binary
+*.webp   binary
+package-lock.json -diff linguist-generated
