@@ -15,7 +15,7 @@ export default function Entrar() {
     <>
       <h1 className="titulo">Entrar</h1>
       <p className="subtitulo">
-        Usá la misma cuenta siempre: es la que enlaza tus pronósticos con tu nombre en la tabla.
+        Usa la misma cuenta siempre: es la que enlaza tus pronósticos con tu nombre en la tabla.
       </p>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         <button className="boton" onClick={() => entrarCon('discord')}>Entrar con Discord</button>

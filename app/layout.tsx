@@ -4,7 +4,7 @@ import { clienteServidor } from '@/lib/supabase';
 
 export const metadata: Metadata = {
   title: 'Porra F1 — Niniers',
-  description: 'Sin plata de por medio. Solo honor.',
+  description: 'Sin dinero de por medio. Solo honor.',
 };
 
 export default async function Layout({ children }: { children: React.ReactNode }) {

@@ -24,9 +24,9 @@ export default function CargarPronosticoIA({ gps, ias, catalogos }: Props) {
     if (!gp) return '';
     const plantilla = plantillaPrediccion(gp.nombre, catalogos);
     return [
-      `Sos participante de una porra de Fórmula 1. Tenés que pronosticar el Gran Premio de ${gp.nombre} (ronda ${gp.ronda}${gp.tipo === 'sprint' ? ', fin de semana con sprint' : ''}).`,
+      `Eres participante de una porra de Fórmula 1. Tienes que pronosticar el Gran Premio de ${gp.nombre} (ronda ${gp.ronda}${gp.tipo === 'sprint' ? ', fin de semana con sprint' : ''}).`,
       '',
-      'Devolvé ÚNICAMENTE un objeto JSON con esta forma exacta, sin texto alrededor y sin bloque de código:',
+      'Devuelve ÚNICAMENTE un objeto JSON con esta forma exacta, sin texto alrededor y sin bloque de código:',
       '',
       JSON.stringify(plantilla, null, 2),
       '',
@@ -37,10 +37,10 @@ export default function CargarPronosticoIA({ gps, ias, catalogos }: Props) {
       '- `interrupciones`: cuántos coches de seguridad y banderas rojas habrá, en total.',
       '- `dnf_dsq`: cuántos coches abandonan o son descalificados.',
       '- `stints`: la estrategia de neumáticos del ganador, en orden. Por ejemplo ["M","H"] para media y luego dura.',
-      '- Usá exactamente los nombres de las listas `_equipos_admitidos`, `_pilotos_admitidos` y `_compuestos_admitidos`.',
-      '- Borrá del JSON las tres claves que empiezan con guion bajo antes de devolverlo.',
+      '- Usa exactamente los nombres de las listas `_equipos_admitidos`, `_pilotos_admitidos` y `_compuestos_admitidos`.',
+      '- Borra del JSON las tres claves que empiezan con guion bajo antes de devolverlo.',
       '',
-      'Cómo se puntúa, por si te ayuda a decidir: 5 puntos por cada posición exacta, 3 si te equivocás por un lugar y 1 si te equivocás por dos. Los podios se comparan contra las cinco primeras posiciones reales, así que un piloto que termina cuarto todavía suma. Piloto del día, vuelta rápida, interrupciones y abandonos dan 5 puntos cada uno si son exactos.',
+      'Cómo se puntúa, por si te ayuda a decidir: 5 puntos por cada posición exacta, 3 si te equivocas por un lugar y 1 si te equivocas por dos. Los podios se comparan contra las cinco primeras posiciones reales, así que un piloto que termina cuarto todavía suma. Piloto del día, vuelta rápida, interrupciones y abandonos dan 5 puntos cada uno si son exactos.',
     ].join('\n');
   }, [gp, catalogos]);
 
@@ -79,7 +79,7 @@ export default function CargarPronosticoIA({ gps, ias, catalogos }: Props) {
       </div>
 
       <div className="tarjeta">
-        <label className="suelto">1 · Lo que le pasás a la IA</label>
+        <label className="suelto">1 · Lo que le pasas a la IA</label>
         <p style={{ color: 'var(--tenue)', fontSize: 14, margin: '0 0 12px' }}>
           Incluye la plantilla y los nombres admitidos, para que no invente equipos ni pilotos.
         </p>
@@ -94,7 +94,7 @@ export default function CargarPronosticoIA({ gps, ias, catalogos }: Props) {
       <div className="tarjeta">
         <label className="suelto" htmlFor="ia-json">2 · Lo que te devolvió</label>
         <p style={{ color: 'var(--tenue)', fontSize: 14, margin: '0 0 12px' }}>
-          Pegá el JSON tal cual. Si trae un bloque de código alrededor, quitalo.
+          Pega el JSON tal cual. Si trae un bloque de código alrededor, quítalo.
           Los nombres se corrigen solos cuando la diferencia es de acentos o mayúsculas.
         </p>
         <textarea id="ia-json" value={texto} rows={10}

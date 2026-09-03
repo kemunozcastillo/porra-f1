@@ -17,7 +17,7 @@ export default async function Admin({
     return (
       <>
         <h1 className="titulo">Admin</h1>
-        <p className="subtitulo">Entrá con una cuenta con permisos.</p>
+        <p className="subtitulo">Entra con una cuenta con permisos.</p>
         <a className="boton" href="/entrar">Entrar</a>
       </>
     );
@@ -58,8 +58,8 @@ export default async function Admin({
       {enIA ? (
         <>
           <p className="subtitulo">
-            Las IAs no tienen cuenta, así que sus pronósticos los cargás vos. Copiá la plantilla,
-            pedísela a cada una y pegá lo que devuelvan. Réplica no pronostica: copia el
+            Las IAs no tienen cuenta, así que sus pronósticos los cargas tú. Copia la plantilla,
+            pídesela a cada una y pega lo que devuelvan. Réplica no pronostica: copia el
             resultado de la ronda anterior con un botón.
           </p>
           <CargarPronosticoIA

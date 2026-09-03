@@ -32,7 +32,7 @@ export default async function PorRonda() {
       <p className="rotulo">Temporada 2026</p>
       <h1 className="titulo">Ronda<br />por ronda</h1>
       <p className="subtitulo">
-        El puntaje de cada fin de semana y los puntos de F1 que repartió. Entrá en una ronda
+        El puntaje de cada fin de semana y los puntos de F1 que repartió. Entra en una ronda
         para ver el desglose de cada participante, casillero por casillero.
       </p>
 

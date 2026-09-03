@@ -26,7 +26,7 @@ export async function guardarPronostico(
   gpId: number, payload: Prediccion
 ): Promise<Respuesta> {
   const { supabase, user, nombre } = await participanteActual();
-  if (!user) return { ok: false, mensaje: 'Iniciá sesión para pronosticar.' };
+  if (!user) return { ok: false, mensaje: 'Inicia sesión para pronosticar.' };
   if (!nombre) return { ok: false, mensaje: 'Tu cuenta todavía no está vinculada a un participante.' };
 
   const { error } = await supabase.from('predicciones').upsert(
@@ -46,7 +46,7 @@ export async function guardarPronostico(
  */
 export async function declararComodin(gpId: number, tipo: TipoComodin): Promise<Respuesta> {
   const { supabase, user, nombre } = await participanteActual();
-  if (!user) return { ok: false, mensaje: 'Iniciá sesión.' };
+  if (!user) return { ok: false, mensaje: 'Inicia sesión.' };
   if (!nombre) return { ok: false, mensaje: 'Tu cuenta todavía no está vinculada a un participante.' };
 
   const { error } = await supabase.from('comodines').insert({ participante: nombre, tipo, gp_id: gpId });
@@ -54,7 +54,7 @@ export async function declararComodin(gpId: number, tipo: TipoComodin): Promise<
   if (error) {
     // 23505 = clave duplicada: o ya lo usó, o ya tiene otro comodín en esta ronda.
     if (error.code === '23505') {
-      return { ok: false, mensaje: 'Ya usaste ese comodín, o ya tenés uno declarado en esta ronda.' };
+      return { ok: false, mensaje: 'Ya usaste ese comodín, o ya tienes uno declarado en esta ronda.' };
     }
     return {
       ok: false,
@@ -71,7 +71,7 @@ export async function declararComodin(gpId: number, tipo: TipoComodin): Promise<
 /** Retira un comodín mientras su plazo siga abierto. */
 export async function retirarComodin(gpId: number, tipo: TipoComodin): Promise<Respuesta> {
   const { supabase, nombre } = await participanteActual();
-  if (!nombre) return { ok: false, mensaje: 'Iniciá sesión.' };
+  if (!nombre) return { ok: false, mensaje: 'Inicia sesión.' };
 
   const { error } = await supabase.from('comodines')
     .delete().eq('participante', nombre).eq('gp_id', gpId).eq('tipo', tipo);
@@ -86,10 +86,10 @@ export async function publicarResultado(
   gpId: number, sesion: Sesion, payload: Resultado
 ): Promise<Respuesta> {
   const { supabase, user } = await participanteActual();
-  if (!user) return { ok: false, mensaje: 'Iniciá sesión.' };
+  if (!user) return { ok: false, mensaje: 'Inicia sesión.' };
 
   const { data: perfil } = await supabase.from('perfiles').select('es_admin').eq('id', user.id).maybeSingle();
-  if (!perfil?.es_admin) return { ok: false, mensaje: 'Necesitás permisos de admin.' };
+  if (!perfil?.es_admin) return { ok: false, mensaje: 'Necesitas permisos de admin.' };
 
   const db = clienteAdmin();
   const { error } = await db.from('resultados').upsert(
@@ -122,10 +122,10 @@ export async function publicarResultado(
 async function soloAdmin() {
   const supabase = await clienteServidor();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return 'Iniciá sesión.';
+  if (!user) return 'Inicia sesión.';
   const { data: perfil } = await supabase
     .from('perfiles').select('es_admin').eq('id', user.id).maybeSingle();
-  return perfil?.es_admin ? null : 'Necesitás permisos de admin.';
+  return perfil?.es_admin ? null : 'Necesitas permisos de admin.';
 }
 
 async function catalogos(): Promise<Catalogos> {

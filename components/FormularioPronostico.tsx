@@ -148,7 +148,7 @@ export default function FormularioPronostico({
           </div>
 
           <div className="tarjeta">
-            <label className="suelto">Estrategia del ganador · dejá en blanco los stints que no uses</label>
+            <label className="suelto">Estrategia del ganador · deja en blanco los stints que no uses</label>
             <div className="rejilla dos">
               {stints.map((valor, i) => (
                 <div className="campo" key={i}>

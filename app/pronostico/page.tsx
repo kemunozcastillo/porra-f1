@@ -11,8 +11,8 @@ export default async function Pronostico() {
   if (!user) {
     return (
       <>
-        <h1 className="titulo">Entrá para<br />pronosticar</h1>
-        <p className="subtitulo">Necesitás iniciar sesión para cargar tu pronóstico.</p>
+        <h1 className="titulo">Entra para<br />pronosticar</h1>
+        <p className="subtitulo">Necesitas iniciar sesión para cargar tu pronóstico.</p>
         <a className="boton" href="/entrar">Entrar</a>
       </>
     );
@@ -46,7 +46,7 @@ export default async function Pronostico() {
         <h1 className="titulo">Falta<br />vincular</h1>
         <p className="subtitulo">
           Tu cuenta existe pero todavía no está enlazada a un participante de la porra.
-          Pedile a un admin que corra: <code>update participantes set perfil_id = &apos;{user.id}&apos; where nombre = &apos;TU_NOMBRE&apos;;</code>
+          Pide a un administrador que ejecute: <code>update participantes set perfil_id = &apos;{user.id}&apos; where nombre = &apos;TU_NOMBRE&apos;;</code>
         </p>
       </>
     );
@@ -68,7 +68,7 @@ export default async function Pronostico() {
 
       {new Date() > new Date(gp.cierra_at) && (
         <div className="aviso">
-          El cierre ya pasó. Podés mandar igual, pero lo que ya se corrió no puntúa:
+          El cierre ya pasó. Puedes enviarlo igual, pero lo que ya se corrió no puntúa:
           se cuenta sólo lo que falta del fin de semana.
         </div>
       )}

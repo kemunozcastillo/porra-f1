@@ -5,7 +5,7 @@ export default function Reglas() {
     <>
       <h1 className="titulo">Cómo se<br />puntúa</h1>
       <p className="subtitulo">
-        Mismas reglas que la planilla de siempre. Nada cambió, sólo dónde vive.
+        Mismas reglas que la hoja de siempre. Nada cambió, sólo dónde vive.
       </p>
 
       <div className="tarjeta">
@@ -83,8 +83,8 @@ export default function Reglas() {
       <div className="tarjeta">
         <label className="suelto">Comodines</label>
         <p style={{ margin: 0 }}>
-          Tenés un <strong>boost</strong> y un <strong>boost a ciegas</strong> por temporada.
-          Cualquiera de los dos duplica el puntaje de esa ronda. Una vez que lo quemás, no vuelve.
+          Tienes un <strong>boost</strong> y un <strong>boost a ciegas</strong> por temporada.
+          Cualquiera de los dos duplica el puntaje de esa ronda. Una vez que lo quemas, no vuelve.
         </p>
       </div>
 
