@@ -1,0 +1,290 @@
+/* ==========================================================
+   Porra F1 — identidad visual
+   Referencia: la torre de tiempos de una transmisión de F1.
+   Bloques densos, números monoespaciados, color sólo cuando
+   significa algo (violeta = líder, verde = sube, ámbar = baja).
+   ========================================================== */
+
+:root {
+  --asfalto:  #0A0C0F;
+  --panel:    #12161B;
+  --panel-2:  #171C23;
+  --linea:    #212932;
+  --texto:    #E9EEF3;
+  --tenue:    #7E8B99;
+  --violeta:  #A855F7;
+  --verde:    #2ED47A;
+  --ambar:    #FFC53D;
+  --rojo:     #FF5A5A;
+
+  --display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --cuerpo:  'Inter', system-ui, sans-serif;
+  --dato:    'JetBrains Mono', ui-monospace, monospace;
+
+  --radio: 3px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--asfalto);
+  color: var(--texto);
+  font-family: var(--cuerpo);
+  font-size: 15px;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+:focus-visible {
+  outline: 2px solid var(--violeta);
+  outline-offset: 2px;
+}
+
+/* ---------- estructura ---------- */
+
+.marco {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 20px 80px;
+}
+
+.barra {
+  display: flex;
+  align-items: baseline;
+  gap: 28px;
+  padding: 18px 0 16px;
+  border-bottom: 1px solid var(--linea);
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.marca {
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.marca span { color: var(--violeta); }
+
+.nav {
+  display: flex;
+  gap: 20px;
+  font-family: var(--display);
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tenue);
+}
+.nav a:hover, .nav a[aria-current='page'] { color: var(--texto); }
+
+.sesion-actual { margin-left: auto; font-size: 13px; color: var(--tenue); }
+
+/* ---------- encabezados ---------- */
+
+.rotulo {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--tenue);
+  margin: 32px 0 10px;
+}
+
+h1.titulo {
+  font-family: var(--display);
+  font-size: clamp(38px, 7vw, 64px);
+  font-weight: 700;
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  margin: 8px 0 4px;
+}
+
+.subtitulo { color: var(--tenue); margin: 0 0 24px; max-width: 58ch; }
+
+/* ---------- torre de tiempos ---------- */
+
+.torre { display: flex; flex-direction: column; gap: 2px; }
+
+.fila {
+  display: grid;
+  grid-template-columns: 44px 1fr auto auto;
+  align-items: center;
+  gap: 14px;
+  background: var(--panel);
+  border-left: 3px solid transparent;
+  padding: 11px 14px 11px 11px;
+  border-radius: var(--radio);
+  transition: background 120ms ease;
+}
+.fila:hover { background: var(--panel-2); }
+.fila.lider { border-left-color: var(--violeta); }
+.fila.podio { border-left-color: var(--linea); }
+
+.pos {
+  font-family: var(--dato);
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tenue);
+  text-align: right;
+}
+.fila.lider .pos { color: var(--violeta); }
+
+.nombre {
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.etiqueta-ia {
+  font-family: var(--cuerpo);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  border: 1px solid var(--linea);
+  color: var(--tenue);
+  padding: 2px 5px;
+  border-radius: 2px;
+  margin-left: 8px;
+  vertical-align: 2px;
+}
+
+.gap {
+  font-family: var(--dato);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  color: var(--tenue);
+}
+.total {
+  font-family: var(--dato);
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  min-width: 62px;
+  text-align: right;
+}
+.fila.lider .total { color: var(--violeta); }
+
+/* tira de rondas: un bloque por GP, coloreado si hubo medalla */
+.tira { display: flex; gap: 2px; grid-column: 1 / -1; margin-top: 9px; }
+.bloque {
+  height: 4px;
+  flex: 1;
+  background: var(--linea);
+  border-radius: 1px;
+}
+.bloque[data-medalla='3'] { background: var(--violeta); }
+.bloque[data-medalla='2'] { background: var(--verde); }
+.bloque[data-medalla='1'] { background: var(--ambar); }
+.bloque[data-jugado='no'] { background: #1A1F26; }
+
+/* ---------- formulario ---------- */
+
+.tarjeta {
+  background: var(--panel);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.rejilla { display: grid; gap: 10px; }
+.rejilla.dos { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+.campo { display: grid; grid-template-columns: 34px 1fr; align-items: center; gap: 10px; }
+.campo > .marcador {
+  font-family: var(--dato);
+  font-size: 12px;
+  color: var(--tenue);
+  text-align: right;
+}
+
+label.suelto {
+  display: block;
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tenue);
+  margin-bottom: 6px;
+}
+
+select, input, textarea {
+  width: 100%;
+  background: var(--asfalto);
+  color: var(--texto);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 9px 10px;
+  font-family: var(--cuerpo);
+  font-size: 14px;
+}
+select:hover, input:hover { border-color: #2E3945; }
+
+.boton {
+  font-family: var(--display);
+  font-size: 16px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: var(--violeta);
+  color: #0A0C0F;
+  border: none;
+  border-radius: var(--radio);
+  padding: 12px 26px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.boton:hover { filter: brightness(1.1); }
+.boton:disabled { background: var(--linea); color: var(--tenue); cursor: not-allowed; }
+.boton.secundario { background: transparent; color: var(--texto); border: 1px solid var(--linea); }
+
+.aviso {
+  border-left: 3px solid var(--ambar);
+  background: var(--panel);
+  padding: 12px 14px;
+  border-radius: var(--radio);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+.aviso.error { border-left-color: var(--rojo); }
+.aviso.ok    { border-left-color: var(--verde); }
+
+.vacio {
+  border: 1px dashed var(--linea);
+  border-radius: var(--radio);
+  padding: 36px 20px;
+  text-align: center;
+  color: var(--tenue);
+}
+
+/* ---------- desglose ---------- */
+
+.desglose { display: grid; gap: 1px; background: var(--linea); border-radius: var(--radio); overflow: hidden; }
+.desglose > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--panel);
+  padding: 9px 14px;
+  font-size: 14px;
+}
+.desglose .puntos { font-family: var(--dato); font-variant-numeric: tabular-nums; }
+.desglose .puntos[data-cero='si'] { color: var(--tenue); }
+
+@media (max-width: 620px) {
+  .fila { grid-template-columns: 34px 1fr auto; gap: 10px; padding: 10px; }
+  .gap { display: none; }
+  .nombre { font-size: 18px; }
+  .marco { padding: 0 14px 60px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
