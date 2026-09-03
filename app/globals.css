@@ -72,16 +72,46 @@ a { color: inherit; text-decoration: none; }
 
 .nav {
   display: flex;
-  gap: 20px;
+  /* Sin envolver, las pestanas se salen de la pantalla en un movil y la
+     ultima queda inalcanzable. Con cinco ya no caben en 375 px. */
+  flex-wrap: wrap;
+  gap: 8px 20px;
   font-family: var(--display);
   font-size: 16px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--tenue);
 }
+.nav a { white-space: nowrap; }
 .nav a:hover, .nav a[aria-current='page'] { color: var(--texto); }
 
-.sesion-actual { margin-left: auto; font-size: 13px; color: var(--tenue); }
+/* La barra alinea por linea base para que la marca y el menu compartan
+   pie. El boton de sesion es una caja con alto propio, asi que se centra
+   aparte o quedaria colgando. */
+.sesion-actual { margin-left: auto; align-self: center; }
+
+.sesion-actual a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 18px;
+  font-family: var(--display);
+  font-size: 15px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  color: var(--texto);
+  white-space: nowrap;
+}
+.sesion-actual a:hover,
+.sesion-actual a:focus-visible { border-color: var(--violeta); color: var(--violeta); }
+
+/* Ya dentro, el boton deja de ser una llamada a la accion y pasa a ser
+   un dato: se apaga para no competir con el menu. */
+.sesion-actual a[data-dentro='si'] { color: var(--tenue); font-size: 13px; min-height: 34px; padding: 0 12px; }
+.sesion-actual a[data-dentro='si']:hover { color: var(--texto); border-color: #2E3945; }
 
 /* ---------- encabezados ---------- */
 

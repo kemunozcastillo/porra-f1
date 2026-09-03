@@ -31,7 +31,9 @@ export default async function Layout({ children }: { children: React.ReactNode }
               <a href="/reglas">Reglas</a>
             </nav>
             <div className="sesion-actual">
-              {user ? <a href="/pronostico">Sesión iniciada</a> : <a href="/entrar">Entrar</a>}
+              {user
+                ? <a href="/pronostico" data-dentro="si">Sesión iniciada</a>
+                : <a href="/entrar">Entrar</a>}
             </div>
           </header>
           {children}
