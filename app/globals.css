@@ -172,6 +172,38 @@ h1.titulo {
 }
 .fila.lider .total { color: var(--violeta); }
 
+/* ---------- medallero ---------- */
+
+/* Cada .fila es su propia rejilla, asi que las columnas `auto` se ajustan
+   al contenido de esa fila y no se alinean con las de al lado. Con
+   "oro/oros" y "cuarto/cuartos" cambiando de ancho, los numeros bailan y
+   la tabla deja de leerse en vertical. De ahi el ancho fijo. */
+.fila.medallero { grid-template-columns: 44px 1fr auto; }
+
+.medallas {
+  display: grid;
+  grid-template-columns: repeat(4, 52px);
+  font-family: var(--dato);
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.cabecera-medallero {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 14px;
+  padding: 0 14px 7px 11px;
+}
+.cabecera-medallero .medallas {
+  font-family: var(--display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--tenue);
+}
+
 /* tira de rondas: un bloque por GP, coloreado si hubo medalla */
 .tira { display: flex; gap: 2px; grid-column: 1 / -1; margin-top: 9px; }
 .bloque {

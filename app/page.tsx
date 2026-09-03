@@ -24,23 +24,39 @@ type Fila = FilaAcumulado | FilaF1 | FilaMedallero;
  * Las medallas se leen en el mismo orden que las ordena: oro, plata,
  * bronce y, como último desempate, cuartos puestos. Los colores son los
  * de la tira de rondas, para que una fila y su tira se lean igual.
+ *
+ * Los rótulos van una sola vez en la cabecera: repetirlos en cada fila
+ * era lo que descolocaba los números, porque "oro" y "cuartos" no miden
+ * lo mismo.
  */
+const ESCALONES = [
+  { clave: 'oros'    as const, rotulo: 'Oro',    color: 'var(--violeta)' },
+  { clave: 'platas'  as const, rotulo: 'Plata',  color: 'var(--verde)' },
+  { clave: 'bronces' as const, rotulo: 'Bronce', color: 'var(--ambar)' },
+  { clave: 'cuartos' as const, rotulo: '4º',     color: 'var(--tenue)' },
+];
+
 function Medallas({ fila }: { fila: FilaMedallero }) {
-  const escalones = [
-    { n: fila.oros,    uno: 'oro',    varios: 'oros',    color: 'var(--violeta)' },
-    { n: fila.platas,  uno: 'plata',  varios: 'platas',  color: 'var(--verde)' },
-    { n: fila.bronces, uno: 'bronce', varios: 'bronces', color: 'var(--ambar)' },
-    { n: fila.cuartos, uno: 'cuarto', varios: 'cuartos', color: 'var(--tenue)' },
-  ];
   return (
-    <>
-      {escalones.map((e, i) => (
-        <span key={e.uno} style={{ color: e.n ? e.color : '#4A5765' }}>
-          {i > 0 && <span style={{ color: '#39434E' }}> · </span>}
-          {e.n} {e.n === 1 ? e.uno : e.varios}
+    <div className="medallas">
+      {ESCALONES.map((e) => (
+        <span key={e.clave} style={{ color: fila[e.clave] ? e.color : '#3F4A57' }}>
+          {fila[e.clave]}
         </span>
       ))}
-    </>
+    </div>
+  );
+}
+
+function CabeceraMedallero() {
+  return (
+    <div className="cabecera-medallero">
+      <span />
+      <span />
+      <div className="medallas">
+        {ESCALONES.map((e) => <span key={e.clave}>{e.rotulo}</span>)}
+      </div>
+    </div>
   );
 }
 
@@ -106,24 +122,27 @@ export default async function Clasificacion({
         <div className="vacio">Todavía no hay puntajes cargados.</div>
       ) : (
         <div className="torre">
+          {esMedallero && <CabeceraMedallero />}
           {filas.map((f, i) => (
-            <div key={f.participante} className={`fila ${i === 0 ? 'lider' : i < 3 ? 'podio' : ''}`}>
+            <div key={f.participante}
+                 className={`fila ${esMedallero ? 'medallero' : ''} ${i === 0 ? 'lider' : i < 3 ? 'podio' : ''}`}>
               <div className="pos">{i + 1}</div>
               <div className="nombre">
                 {f.participante}
                 {f.tipo !== 'humano' && <span className="etiqueta-ia">{f.tipo}</span>}
               </div>
-              <div className="gap">
-                {esMedallero
-                  ? <Medallas fila={f as FilaMedallero} />
-                  : esF1
-                    ? `${(f as FilaF1).victorias} vict · ${(f as FilaF1).podios} podios`
-                    : i === 0 ? 'líder' : `+${lider - valorDe(f)}`}
-              </div>
-              <div className="total">
-                {valorDe(f)}
-                {esMedallero && <span style={{ fontSize: 13, color: 'var(--tenue)' }}> oro</span>}
-              </div>
+              {esMedallero ? (
+                <Medallas fila={f as FilaMedallero} />
+              ) : (
+                <>
+                  <div className="gap">
+                    {esF1
+                      ? `${(f as FilaF1).victorias} vict · ${(f as FilaF1).podios} podios`
+                      : i === 0 ? 'líder' : `+${lider - valorDe(f)}`}
+                  </div>
+                  <div className="total">{valorDe(f)}</div>
+                </>
+              )}
               <div className="tira" aria-hidden={false}>
                 {gps?.map((g) => {
                   const m = medallaDe.get(`${f.participante}|${g.id}`);
