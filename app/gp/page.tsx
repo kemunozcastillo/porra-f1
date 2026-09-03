@@ -11,10 +11,18 @@ type Posicion = {
 export default async function PorRonda() {
   const supabase = await clienteServidor();
 
-  const [{ data: gps }, { data: posiciones }] = await Promise.all([
+  const [{ data: gps }, { data: posiciones }, { data: comodines }] = await Promise.all([
     supabase.from('gps').select('id, ronda, nombre, slug, tipo, estado, carrera_at').order('ronda'),
     supabase.from('posiciones_gp').select('participante, gp_id, total_gp, posicion, medalla, puntos_f1'),
+    supabase.from('comodines').select('participante, tipo, gp_id'),
   ]);
+
+  const comodinesDe = new Map<number, { participante: string; tipo: string }[]>();
+  (comodines ?? []).forEach((c) => {
+    const lista = comodinesDe.get(c.gp_id) ?? [];
+    lista.push({ participante: c.participante as string, tipo: c.tipo as string });
+    comodinesDe.set(c.gp_id, lista);
+  });
 
   const porGp = new Map<number, Posicion[]>();
   (posiciones ?? []).forEach((p) => {
@@ -84,6 +92,14 @@ export default async function PorRonda() {
                     <a href={`/gp/${g.slug}`}>ver todo</a>
                   </span>
                 </div>
+                {(comodinesDe.get(g.id) ?? []).map((c) => (
+                  <div key={`${c.participante}|${c.tipo}`}>
+                    <span style={{ color: c.tipo === 'boost_ciegas' ? 'var(--ambar)' : 'var(--violeta)' }}>
+                      {c.tipo === 'boost_ciegas' ? 'Boost a ciegas' : 'Boost'} · {c.participante}
+                    </span>
+                    <span className="puntos" style={{ fontWeight: 400, color: 'var(--tenue)' }}>×2 GP</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>

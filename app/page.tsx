@@ -66,18 +66,39 @@ export default async function Clasificacion({
   const { tabla } = await searchParams;
   const esF1 = tabla === 'f1';
   const esMedallero = tabla === 'podios';
+  const esBoosts = tabla === 'boosts';
   const supabase = await clienteServidor();
 
-  const [acumulado, campeonato, medallero, { data: gps }, { data: posiciones }] = await Promise.all([
-    supabase.from('clasificacion').select('*'),
-    supabase.from('campeonato_f1').select('*'),
-    supabase.from('medallero').select('*'),
-    supabase.from('gps').select('id, ronda, nombre, slug, estado').order('ronda'),
-    supabase.from('posiciones_gp').select('participante, gp_id, medalla'),
-  ]);
+  const [acumulado, campeonato, medallero, { data: gps }, { data: posiciones }, { data: comodines }, { data: puntajesGp }] =
+    await Promise.all([
+      supabase.from('clasificacion').select('*'),
+      supabase.from('campeonato_f1').select('*'),
+      supabase.from('medallero').select('*'),
+      supabase.from('gps').select('id, ronda, nombre, slug, estado').order('ronda'),
+      supabase.from('posiciones_gp').select('participante, gp_id, medalla'),
+      // RLS sólo deja ver los comodines ajenos una vez cerrada su ronda,
+      // así que un boost de la ronda en curso no se le filtra a nadie.
+      supabase.from('comodines').select('participante, tipo, gp_id'),
+      supabase.from('puntajes').select('participante, gp_id, puntos').eq('sesion', 'gp'),
+    ]);
 
   const medallaDe = new Map<string, number>();
   posiciones?.forEach((p) => medallaDe.set(`${p.participante}|${p.gp_id}`, p.medalla));
+
+  // El boost duplica la sesión de Gran Premio, así que lo que sumó es
+  // exactamente el puntaje de esa sesión: se cobra una segunda vez.
+  const puntajeGpDe = new Map<string, number>();
+  (puntajesGp ?? []).forEach((p) => puntajeGpDe.set(`${p.participante}|${p.gp_id}`, p.puntos));
+
+  const gpPorId = new Map(gps?.map((g) => [g.id, g]) ?? []);
+  const boosts = (comodines ?? [])
+    .map((c) => ({
+      participante: c.participante as string,
+      tipo: c.tipo as string,
+      gp: gpPorId.get(c.gp_id),
+      puntos: puntajeGpDe.get(`${c.participante}|${c.gp_id}`),
+    }))
+    .sort((a, b) => (b.puntos ?? -1) - (a.puntos ?? -1));
 
   const filas: Fila[] = esMedallero
     ? ((medallero.data ?? []) as FilaMedallero[])
@@ -95,15 +116,19 @@ export default async function Clasificacion({
   const proximo = gps?.find((g) => g.estado === 'abierto') ?? gps?.find((g) => g.estado === 'proximo');
   const slugDe = new Map(gps?.map((g) => [g.id, g.slug]) ?? []);
 
-  const titulo = esMedallero
-    ? <>El<br />medallero</>
-    : esF1 ? <>Campeonato<br />paralelo</> : <>La tabla<br />no miente</>;
+  const titulo = esBoosts
+    ? <>Los<br />comodines</>
+    : esMedallero
+      ? <>El<br />medallero</>
+      : esF1 ? <>Campeonato<br />paralelo</> : <>La tabla<br />no miente</>;
 
-  const subtitulo = esMedallero
-    ? 'Criterio olímpico: manda quien más rondas ganó. Un oro vale más que cualquier cantidad de platas, y una plata más que cualquier cantidad de bronces. Si hay empate se baja a los cuartos puestos.'
-    : esF1
-      ? 'Puntos de F1 según tu posición en cada ronda: 25 al que gana el fin de semana, 18 al segundo, y así hasta el décimo. Ganar por un punto vale lo mismo que ganar por cuarenta.'
-      : 'Suma de todo lo que acertaste, más las medallas por ganar una ronda y el boost si lo quemaste.';
+  const subtitulo = esBoosts
+    ? 'Un boost y un boost a ciegas por temporada, y una vez quemados no vuelven. Los dos duplican el puntaje del Gran Premio: en un fin de semana con sprint, el sprint no se dobla. La columna de la derecha es lo que sumó cada uno.'
+    : esMedallero
+      ? 'Criterio olímpico: manda quien más rondas ganó. Un oro vale más que cualquier cantidad de platas, y una plata más que cualquier cantidad de bronces. Si hay empate se baja a los cuartos puestos.'
+      : esF1
+        ? 'Puntos de F1 según tu posición en cada ronda: 25 al que gana el fin de semana, 18 al segundo, y así hasta el décimo. Ganar por un punto vale lo mismo que ganar por cuarenta.'
+        : 'Suma de todo lo que acertaste, más las medallas por ganar una ronda y el boost si lo quemaste.';
 
   return (
     <>
@@ -115,10 +140,39 @@ export default async function Clasificacion({
         <a href="/" aria-current={!esF1 && !esMedallero ? 'page' : undefined}>Acumulado</a>
         <a href="/?tabla=f1" aria-current={esF1 ? 'page' : undefined}>Puntos F1</a>
         <a href="/?tabla=podios" aria-current={esMedallero ? 'page' : undefined}>Podios</a>
+        <a href="/?tabla=boosts" aria-current={esBoosts ? 'page' : undefined}>Comodines</a>
         <a href="/gp">Por ronda</a>
       </nav>
 
-      {filas.length === 0 ? (
+      {esBoosts ? (
+        boosts.length === 0 ? (
+          <div className="vacio">Todavía no hay ningún comodín declarado.</div>
+        ) : (
+          <div className="torre">
+            {boosts.map((b, i) => (
+              <div key={`${b.participante}|${b.tipo}`} className={`fila ${i === 0 ? 'lider' : ''}`}>
+                <div className="pos">{i + 1}</div>
+                <div className="nombre">
+                  {b.participante}
+                  <span className="comodin" data-tipo={b.tipo}>
+                    {b.tipo === 'boost_ciegas' ? 'A CIEGAS' : 'NORMAL'}
+                  </span>
+                </div>
+                <div className="gap">
+                  {b.gp ? (
+                    <a href={`/gp/${b.gp.slug}`}>R{b.gp.ronda} · {b.gp.nombre}</a>
+                  ) : 'ronda desconocida'}
+                </div>
+                <div className="total">
+                  {b.puntos === undefined
+                    ? <span style={{ fontSize: 13, color: 'var(--tenue)' }}>sin correr</span>
+                    : <>+{b.puntos}</>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      ) : filas.length === 0 ? (
         <div className="vacio">Todavía no hay puntajes cargados.</div>
       ) : (
         <div className="torre">

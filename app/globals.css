@@ -157,6 +157,25 @@ h1.titulo {
   vertical-align: 2px;
 }
 
+/* Comodines quemados. Solo aparece el que se uso: la ausencia ya dice
+   que sigue guardado, y dos chapas por fila ensuciaban la tabla.
+   Violeta el boost normal, ambar el de a ciegas, que es el mismo par de
+   colores con el que la tira distingue oro de bronce. */
+.comodin {
+  font-family: var(--cuerpo);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  border: 1px solid currentColor;
+  padding: 2px 5px;
+  border-radius: 2px;
+  margin-left: 6px;
+  vertical-align: 2px;
+  white-space: nowrap;
+  opacity: 0.85;
+}
+.comodin[data-tipo='boost']        { color: var(--violeta); }
+.comodin[data-tipo='boost_ciegas'] { color: var(--ambar); }
+
 .gap {
   font-family: var(--dato);
   font-size: 13px;
