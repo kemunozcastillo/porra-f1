@@ -45,8 +45,9 @@ export default async function Pronostico() {
       <>
         <h1 className="titulo">Falta<br />vincular</h1>
         <p className="subtitulo">
-          Tu cuenta existe pero todavía no está enlazada a un participante de la porra.
-          Pide a un administrador que ejecute: <code>update participantes set perfil_id = &apos;{user.id}&apos; where nombre = &apos;TU_NOMBRE&apos;;</code>
+          Tu cuenta ya está creada, pero todavía no sabemos quién eres en la porra.
+          Avisa por Discord a un administrador para que la asocie con tu nombre y
+          podrás empezar a pronosticar.
         </p>
       </>
     );
