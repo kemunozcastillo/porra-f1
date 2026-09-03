@@ -18,10 +18,17 @@ export async function GET(request: Request) {
       user.user_metadata.name ??
       user.email?.split('@')[0] ??
       'Piloto';
-    await supabase.from('perfiles').upsert(
+    const { error: errorPerfil } = await supabase.from('perfiles').upsert(
       { id: user.id, nombre, avatar_url: user.user_metadata.avatar_url ?? null },
       { onConflict: 'id', ignoreDuplicates: true }
     );
+    // Si el alta falla, la sesion existe pero no hay fila en `perfiles`, y
+    // la persona queda en un limbo: entra, pero no se la puede vincular.
+    // Se avisa en vez de seguir en silencio.
+    if (errorPerfil) {
+      console.error('No se pudo crear el perfil:', errorPerfil);
+      return NextResponse.redirect(`${origin}/?error=perfil`);
+    }
   }
   return NextResponse.redirect(`${origin}/pronostico`);
 }

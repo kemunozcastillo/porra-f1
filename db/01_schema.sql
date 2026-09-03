@@ -306,7 +306,25 @@ create policy "editar mi pronostico" on predicciones for update using (
   )
 );
 
+-- Alta del propio perfil en el primer login. Sin esta politica RLS
+-- rechaza el upsert de app/auth/callback/route.ts y nadie llega a tener
+-- fila en `perfiles`, con lo que no hay forma de vincular a nadie.
+create policy "crear mi perfil" on perfiles for insert
+  with check (id = auth.uid());
+
 create policy "editar mi perfil" on perfiles for update using (id = auth.uid());
+
+-- RLS decide QUE filas se tocan, pero no QUE columnas. La politica de
+-- arriba solo comprueba `id = auth.uid()`, y eso sigue siendo cierto
+-- despues de ponerse `es_admin = true`: sin esto, cualquiera que entre
+-- con Discord puede promoverse a admin sobre su propia fila. El permiso
+-- por columna es lo que lo impide.
+--
+-- `es_admin` y `activo` quedan reservados a service_role, que es quien
+-- corre las acciones de administracion desde el servidor.
+revoke insert, update on perfiles from anon, authenticated;
+grant  insert (id, nombre, avatar_url) on perfiles to anon, authenticated;
+grant  update (nombre, avatar_url)     on perfiles to anon, authenticated;
 
 -- ---------- Comodines: los plazos los impone la base ----------
 
