@@ -62,8 +62,8 @@ function CabeceraMedallero() {
 
 export default async function Clasificacion({
   searchParams,
-}: { searchParams: Promise<{ tabla?: string }> }) {
-  const { tabla } = await searchParams;
+}: { searchParams: Promise<{ tabla?: string; tipo?: string }> }) {
+  const { tabla, tipo } = await searchParams;
   const esF1 = tabla === 'f1';
   const esMedallero = tabla === 'podios';
   const esBoosts = tabla === 'boosts';
@@ -91,7 +91,7 @@ export default async function Clasificacion({
   (puntajesGp ?? []).forEach((p) => puntajeGpDe.set(`${p.participante}|${p.gp_id}`, p.puntos));
 
   const gpPorId = new Map(gps?.map((g) => [g.id, g]) ?? []);
-  const boosts = (comodines ?? [])
+  const todosLosBoosts = (comodines ?? [])
     .map((c) => ({
       participante: c.participante as string,
       tipo: c.tipo as string,
@@ -99,6 +99,15 @@ export default async function Clasificacion({
       puntos: puntajeGpDe.get(`${c.participante}|${c.gp_id}`),
     }))
     .sort((a, b) => (b.puntos ?? -1) - (a.puntos ?? -1));
+
+  const filtroTipo = tipo === 'boost' || tipo === 'boost_ciegas' ? tipo : null;
+  const boosts = filtroTipo ? todosLosBoosts.filter((b) => b.tipo === filtroTipo) : todosLosBoosts;
+
+  const FILTROS = [
+    { valor: null,            rotulo: 'Todos',    color: 'var(--texto)' },
+    { valor: 'boost',         rotulo: 'Normal',   color: 'var(--violeta)' },
+    { valor: 'boost_ciegas',  rotulo: 'A ciegas', color: 'var(--ambar)' },
+  ] as const;
 
   const filas: Fila[] = esMedallero
     ? ((medallero.data ?? []) as FilaMedallero[])
@@ -145,8 +154,26 @@ export default async function Clasificacion({
       </nav>
 
       {esBoosts ? (
-        boosts.length === 0 ? (
-          <div className="vacio">Todavía no hay ningún comodín declarado.</div>
+        <>
+        <div className="filtros">
+          {FILTROS.map((f) => {
+            const activo = filtroTipo === f.valor;
+            const n = f.valor ? todosLosBoosts.filter((b) => b.tipo === f.valor).length : todosLosBoosts.length;
+            return (
+              <a key={f.rotulo}
+                 href={f.valor ? `/?tabla=boosts&tipo=${f.valor}` : '/?tabla=boosts'}
+                 aria-current={activo ? 'page' : undefined}
+                 style={activo ? { color: f.color, borderColor: 'currentColor' } : undefined}>
+                {f.rotulo} <span className="cuenta">{n}</span>
+              </a>
+            );
+          })}
+        </div>
+
+        {boosts.length === 0 ? (
+          <div className="vacio">
+            {filtroTipo ? 'Nadie ha quemado ese comodín todavía.' : 'Todavía no hay ningún comodín declarado.'}
+          </div>
         ) : (
           <div className="torre">
             {boosts.map((b, i) => (
@@ -171,7 +198,8 @@ export default async function Clasificacion({
               </div>
             ))}
           </div>
-        )
+        )}
+        </>
       ) : filas.length === 0 ? (
         <div className="vacio">Todavía no hay puntajes cargados.</div>
       ) : (

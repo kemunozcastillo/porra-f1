@@ -176,6 +176,29 @@ h1.titulo {
 .comodin[data-tipo='boost']        { color: var(--violeta); }
 .comodin[data-tipo='boost_ciegas'] { color: var(--ambar); }
 
+/* Filtro por tipo de comodin. El estado activo va en la URL y no en el
+   cliente: asi el enlace filtrado se puede compartir y la vuelta atras
+   del navegador funciona sola. */
+.filtros { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.filtros a {
+  font-family: var(--display);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--tenue);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio);
+  padding: 6px 11px;
+}
+.filtros a:hover { border-color: #2E3945; color: var(--texto); }
+.filtros .cuenta {
+  font-family: var(--dato);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.55;
+  margin-left: 4px;
+}
+
 .gap {
   font-family: var(--dato);
   font-size: 13px;
