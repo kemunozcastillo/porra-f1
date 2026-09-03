@@ -1,6 +1,7 @@
 import { clienteServidor } from '@/lib/supabase';
 import FormularioResultado from '@/components/FormularioResultado';
 import CargarPronosticoIA from '@/components/CargarPronosticoIA';
+import VincularCuentas, { type Perfil, type Participante } from '@/components/VincularCuentas';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,6 +10,7 @@ export default async function Admin({
 }: { searchParams: Promise<{ panel?: string }> }) {
   const { panel } = await searchParams;
   const enIA = panel === 'ia';
+  const enCuentas = panel === 'cuentas';
 
   const supabase = await clienteServidor();
   const { data: { user } } = await supabase.auth.getUser();
@@ -33,29 +35,52 @@ export default async function Admin({
     );
   }
 
-  const [{ data: gps }, { data: equipos }, { data: pilotos }, { data: compuestos }, { data: ias }] =
+  const [{ data: gps }, { data: equipos }, { data: pilotos }, { data: compuestos }, { data: participantes }, { data: perfiles }] =
     await Promise.all([
       supabase.from('gps').select('id, ronda, nombre, tipo').order('ronda'),
       supabase.from('equipos').select('nombre').eq('activo', true).order('nombre'),
       supabase.from('pilotos').select('nombre').eq('activo', true).order('nombre'),
       supabase.from('compuestos').select('codigo, nombre'),
-      supabase.from('participantes').select('nombre').eq('tipo', 'ia').order('nombre'),
+      supabase.from('participantes').select('nombre, tipo, perfil_id').order('nombre'),
+      supabase.from('perfiles').select('id, nombre, avatar_url, es_admin, creado_at').order('creado_at'),
     ]);
 
   const listaEquipos = (equipos ?? []).map((e) => e.nombre as string);
   const listaPilotos = (pilotos ?? []).map((p) => p.nombre as string);
+  const listaParticipantes = (participantes ?? []) as Participante[];
+  const sinVincular = (perfiles ?? []).filter(
+    (pe) => !listaParticipantes.some((pa) => pa.perfil_id === pe.id)
+  ).length;
+
+  const titulo = enCuentas ? <>Cuentas<br />de Discord</>
+    : enIA ? <>Pronósticos<br />de las IAs</>
+    : <>Cargar<br />resultado</>;
 
   return (
     <>
       <p className="rotulo">Panel de admin</p>
-      <h1 className="titulo">{enIA ? <>Pronósticos<br />de las IAs</> : <>Cargar<br />resultado</>}</h1>
+      <h1 className="titulo">{titulo}</h1>
 
       <nav className="nav" style={{ marginBottom: 22 }}>
-        <a href="/admin" aria-current={!enIA ? 'page' : undefined}>Resultado oficial</a>
+        <a href="/admin" aria-current={!enIA && !enCuentas ? 'page' : undefined}>Resultado oficial</a>
         <a href="/admin?panel=ia" aria-current={enIA ? 'page' : undefined}>Pronósticos de IA</a>
+        <a href="/admin?panel=cuentas" aria-current={enCuentas ? 'page' : undefined}>
+          Cuentas{sinVincular > 0 && ` (${sinVincular})`}
+        </a>
       </nav>
 
-      {enIA ? (
+      {enCuentas ? (
+        <>
+          <p className="subtitulo">
+            Cada persona entra una vez con Discord y su cuenta aparece aquí sola. Hasta que la
+            asocies con su nombre en la porra puede iniciar sesión, pero no enviar pronósticos.
+          </p>
+          <VincularCuentas
+            perfiles={(perfiles ?? []) as Perfil[]}
+            participantes={listaParticipantes}
+          />
+        </>
+      ) : enIA ? (
         <>
           <p className="subtitulo">
             Las IAs no tienen cuenta, así que sus pronósticos los cargas tú. Copia la plantilla,
@@ -64,7 +89,7 @@ export default async function Admin({
           </p>
           <CargarPronosticoIA
             gps={gps ?? []}
-            ias={(ias ?? []).map((i) => i.nombre as string)}
+            ias={listaParticipantes.filter((p) => p.tipo === 'ia').map((p) => p.nombre)}
             catalogos={{
               equipos: listaEquipos,
               pilotos: listaPilotos,

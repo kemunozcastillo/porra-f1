@@ -239,3 +239,56 @@ export async function generarPronosticoReplica(gpId: number): Promise<RespuestaC
 
   return { ok: false, mensaje: 'Ninguna ronda anterior tiene resultado publicado todavía.' };
 }
+
+// ------------------------------------------------------------------
+// Vinculación de cuentas de Discord con participantes
+// ------------------------------------------------------------------
+
+/**
+ * Cada persona entra una vez con Discord, lo que le crea su fila en
+ * `perfiles`, y después un admin la enlaza con su nombre histórico en la
+ * porra. Hasta ese momento puede iniciar sesión pero no pronosticar,
+ * porque `mi_participante()` no le devuelve nada.
+ *
+ * La escritura va con clave de servicio porque `participantes` no tiene
+ * política de escritura: nadie puede reasignarse a sí mismo, ni siquiera
+ * su propia fila. El guardia es `soloAdmin()`.
+ */
+export async function vincularPerfil(
+  perfilId: string, participante: string
+): Promise<Respuesta> {
+  const no = await soloAdmin();
+  if (no) return { ok: false, mensaje: no };
+
+  const db = clienteAdmin();
+  const { error } = await db.from('participantes')
+    .update({ perfil_id: perfilId }).eq('nombre', participante);
+
+  if (error) {
+    // 23505: `participantes.perfil_id` es unique, así que ese perfil ya
+    // está enlazado a otro participante.
+    if (error.code === '23505') {
+      return { ok: false, mensaje: 'Esa cuenta ya está vinculada a otro participante. Desvinculala primero.' };
+    }
+    return { ok: false, mensaje: `No se pudo vincular: ${error.message}` };
+  }
+
+  revalidatePath('/admin');
+  revalidatePath('/');
+  return { ok: true, mensaje: `Cuenta vinculada a ${participante}.` };
+}
+
+/** Deshace la vinculación. Los pronósticos ya enviados no se tocan. */
+export async function desvincularParticipante(participante: string): Promise<Respuesta> {
+  const no = await soloAdmin();
+  if (no) return { ok: false, mensaje: no };
+
+  const db = clienteAdmin();
+  const { error } = await db.from('participantes')
+    .update({ perfil_id: null }).eq('nombre', participante);
+  if (error) return { ok: false, mensaje: `No se pudo desvincular: ${error.message}` };
+
+  revalidatePath('/admin');
+  revalidatePath('/');
+  return { ok: true, mensaje: `${participante} quedó sin cuenta asociada.` };
+}
