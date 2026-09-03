@@ -43,6 +43,16 @@ def sql(v):
     if isinstance(v, datetime): return "'" + v.isoformat(sep=' ') + ZONA + "'"
     return "'" + str(v).replace("'", "''") + "'"
 
+def sql_ts(v):
+    """Timestamp del Excel -> literal SQL.
+
+    Lo que no sea una fecha real (celdas con '-', vacías o con basura) se
+    emite como null: es preferible decir "no se sabe" a inventar una hora.
+    No afecta al puntaje, porque estas filas van con hora_confiable = false
+    y el motor ni mira `enviado_at` en ese caso.
+    """
+    return sql(v) if isinstance(v, datetime) else 'null'
+
 def limpio(v):
     """Celda -> str/int/None, descartando NaN y vacíos."""
     if v is None: return None
@@ -275,7 +285,7 @@ def main(ruta):
         out.append(
             "insert into predicciones (participante, gp_id, payload, enviado_at, hora_confiable) select "
             f"{sql(str(f['ID_usuario']).strip())}, id, {sql(json.dumps(payload, ensure_ascii=False))}::jsonb, "
-            f"{sql(f.get('Timestamp'))}, false from gps where slug = {sql(s)} "
+            f"{sql_ts(f.get('Timestamp'))}, false from gps where slug = {sql(s)} "
             "on conflict (participante, gp_id) do update set payload = excluded.payload;"
         )
         # validación contra el Excel

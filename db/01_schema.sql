@@ -83,7 +83,9 @@ create table if not exists predicciones (
   gp_id        int  not null references gps(id) on delete cascade,
   payload      jsonb not null,
   -- Lo estampa Postgres, no el navegador. Un solo reloj para todos.
-  enviado_at   timestamptz not null default now(),
+  -- Admite null a propósito: 70 pronósticos del Excel llegaron sin marca
+  -- de tiempo y null dice "no se sabe". Los nuevos siempre traen `now()`.
+  enviado_at   timestamptz default now(),
   -- Falso en todo lo migrado del Excel: ahí el timestamp lo ponía la PC
   -- de cada uno, así que la misma hora significaba cosas distintas según
   -- el país. Cuando es falso, el corte por horario no se aplica y sólo
