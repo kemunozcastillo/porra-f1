@@ -24,7 +24,7 @@ export async function recalcularGP(gpId: number) {
       .eq('id', gpId).maybeSingle(),
   ]);
 
-  if (!resultados?.length || !predicciones?.length) return { filas: 0 };
+  if (!resultados?.length || !predicciones?.length) return { filas: 0, podio: false };
 
   const oficiales = new Map<Sesion, Resultado>(
     resultados.filter((r) => r.publicado).map((r) => [r.sesion as Sesion, r.payload as Resultado])
@@ -69,9 +69,25 @@ export async function recalcularGP(gpId: number) {
     }
   }
 
-  if (!filas.length) return { filas: 0 };
+  if (!filas.length) return { filas: 0, podio: false };
 
   await db.from('puntajes').upsert(filas, { onConflict: 'participante,gp_id,sesion' });
+
+  // El podio de la ronda sale de ordenar el puntaje del fin de semana
+  // entero, así que no se reparte hasta que está cargada la carrera. Con
+  // sólo la clasificación el orden sería provisional, y las medallas y
+  // los puntos F1 cambiarían de dueño al llegar el domingo.
+  const gpOficial = oficiales.get('gp');
+  const hayCarrera = !!(
+    gpOficial?.carrera_equipos?.some(Boolean) || gpOficial?.carrera_podio?.some(Boolean)
+  );
+
+  if (!hayCarrera) {
+    // Si quedaban posiciones de un recálculo anterior se borran: la
+    // invariante es que existen exactamente cuando existe la carrera.
+    await db.from('posiciones_gp').delete().eq('gp_id', gpId);
+    return { filas: filas.length, podio: false };
+  }
 
   // Medallas y puntos F1 de la ronda.
   const tabla = clasificarGP(
@@ -83,7 +99,7 @@ export async function recalcularGP(gpId: number) {
     { onConflict: 'participante,gp_id' }
   );
 
-  return { filas: filas.length };
+  return { filas: filas.length, podio: true };
 }
 
 /** Recalcula toda la temporada. Útil tras cambiar una regla. */

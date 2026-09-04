@@ -2,6 +2,7 @@ import { clienteServidor } from '@/lib/supabase';
 import FormularioResultado from '@/components/FormularioResultado';
 import CargarPronosticoIA from '@/components/CargarPronosticoIA';
 import VincularCuentas, { type Perfil, type Participante } from '@/components/VincularCuentas';
+import type { Resultado } from '@/lib/puntaje';
 
 export const dynamic = 'force-dynamic';
 
@@ -35,7 +36,7 @@ export default async function Admin({
     );
   }
 
-  const [{ data: gps }, { data: equipos }, { data: pilotos }, { data: compuestos }, { data: participantes }, { data: perfiles }] =
+  const [{ data: gps }, { data: equipos }, { data: pilotos }, { data: compuestos }, { data: participantes }, { data: perfiles }, { data: resultados }] =
     await Promise.all([
       supabase.from('gps').select('id, ronda, nombre, tipo').order('ronda'),
       supabase.from('equipos').select('nombre').eq('activo', true).order('nombre'),
@@ -43,6 +44,7 @@ export default async function Admin({
       supabase.from('compuestos').select('codigo, nombre'),
       supabase.from('participantes').select('nombre, tipo, perfil_id').order('nombre'),
       supabase.from('perfiles').select('id, nombre, avatar_url, es_admin, creado_at').order('creado_at'),
+      supabase.from('resultados').select('gp_id, sesion, payload'),
     ]);
 
   const listaEquipos = (equipos ?? []).map((e) => e.nombre as string);
@@ -100,14 +102,17 @@ export default async function Admin({
       ) : (
         <>
           <p className="subtitulo">
-            Al publicar se recalculan todos los pronósticos de la ronda, se reparten las medallas
-            y se actualiza la tabla. Se puede corregir y volver a publicar las veces que haga falta.
+            La clasificación y la carrera se cargan por separado, cuando toque cada una. Al
+            guardar se recalculan los puntajes de la ronda; las medallas y los puntos F1 esperan
+            a que esté la carrera, porque hasta entonces el orden sería provisional. Se puede
+            corregir y volver a publicar las veces que haga falta.
           </p>
           <FormularioResultado
             gps={gps ?? []}
             equipos={listaEquipos}
             pilotos={listaPilotos}
             compuestos={compuestos ?? []}
+            resultados={(resultados ?? []) as { gp_id: number; sesion: string; payload: Partial<Resultado> }[]}
           />
         </>
       )}

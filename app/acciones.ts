@@ -81,27 +81,49 @@ export async function retirarComodin(gpId: number, tipo: TipoComodin): Promise<R
   return { ok: true, mensaje: 'Comodín retirado.' };
 }
 
-/** Carga o corrige un resultado oficial y dispara el recálculo de la ronda. */
-export async function publicarResultado(
-  gpId: number, sesion: Sesion, payload: Resultado
-): Promise<Respuesta> {
-  const { supabase, user } = await participanteActual();
-  if (!user) return { ok: false, mensaje: 'Inicia sesión.' };
+export type BloqueResultado = 'qualy' | 'carrera';
 
-  const { data: perfil } = await supabase.from('perfiles').select('es_admin').eq('id', user.id).maybeSingle();
-  if (!perfil?.es_admin) return { ok: false, mensaje: 'Necesitas permisos de admin.' };
+/**
+ * Carga o corrige un bloque del resultado oficial y recalcula la ronda.
+ *
+ * Se carga por partes porque el fin de semana llega por partes: el
+ * sábado se conoce la clasificación y el domingo la carrera. Antes había
+ * que volver a teclear la clasificación entera para poder guardar la
+ * carrera, y era el doble de trabajo para nada.
+ *
+ * Lo que llega se fusiona con lo que ya hubiera guardado en esa sesión,
+ * así que corregir un bloque no borra el otro.
+ */
+export async function publicarResultado(
+  gpId: number, sesion: Sesion, bloque: BloqueResultado, datos: Partial<Resultado>
+): Promise<Respuesta> {
+  const no = await soloAdmin();
+  if (no) return { ok: false, mensaje: no };
 
   const db = clienteAdmin();
+  const { data: previo } = await db.from('resultados')
+    .select('payload').eq('gp_id', gpId).eq('sesion', sesion).maybeSingle();
+
+  const payload = { ...((previo?.payload as Partial<Resultado>) ?? {}), ...datos };
+
   const { error } = await db.from('resultados').upsert(
     { gp_id: gpId, sesion, payload, publicado: true, cargado_at: new Date().toISOString() },
     { onConflict: 'gp_id,sesion' }
   );
-  if (error) return { ok: false, mensaje: 'No se pudo guardar el resultado.' };
+  if (error) return { ok: false, mensaje: `No se pudo guardar: ${error.message}` };
 
-  const { filas } = await recalcularGP(gpId);
+  const { filas, podio } = await recalcularGP(gpId);
   revalidatePath('/');
+  revalidatePath('/gp');
   revalidatePath('/admin');
-  return { ok: true, mensaje: `Resultado publicado. Se recalcularon ${filas} pronósticos.` };
+
+  const que = bloque === 'qualy' ? 'Clasificación' : 'Carrera';
+  return {
+    ok: true,
+    mensaje: podio
+      ? `${que} guardada. ${filas} puntajes recalculados y medallas repartidas.`
+      : `${que} guardada. ${filas} puntajes recalculados. Las medallas y los puntos F1 esperan a la carrera.`,
+  };
 }
 
 // ------------------------------------------------------------------

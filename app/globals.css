@@ -210,7 +210,7 @@ h1.titulo {
    cliente: asi el enlace filtrado se puede compartir y la vuelta atras
    del navegador funciona sola. */
 .filtros { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
-.filtros a {
+.filtros a, .filtros .pestana {
   font-family: var(--display);
   font-size: 12px;
   letter-spacing: 0.1em;
@@ -221,7 +221,18 @@ h1.titulo {
   border-radius: var(--radio);
   padding: 6px 11px;
 }
-.filtros a:hover { border-color: #2E3945; color: var(--texto); }
+.filtros a:hover, .filtros .pestana:hover { border-color: #2E3945; color: var(--texto); }
+
+/* Misma chapa, pero como boton: el filtro de la portada navega y el
+   selector de bloque del panel solo cambia lo que se muestra, asi que
+   uno es enlace y el otro no. */
+.filtros .pestana {
+  background: none;
+  cursor: pointer;
+  width: auto;
+  line-height: 1.2;
+}
+.filtros .pestana[aria-current='page'] { color: var(--texto); border-color: currentColor; }
 .filtros .cuenta {
   font-family: var(--dato);
   font-variant-numeric: tabular-nums;
