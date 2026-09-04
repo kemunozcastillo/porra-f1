@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { guardarPronostico, declararComodin, retirarComodin, type TipoComodin } from '@/app/acciones';
+import { guardarPronostico, declararComodin, retirarComodin, pronosticoAnterior, type TipoComodin } from '@/app/acciones';
 import type { Prediccion } from '@/lib/puntaje';
 
 interface Props {
@@ -64,6 +64,30 @@ export default function FormularioPronostico({
     });
   }
 
+  /**
+   * Copia el pronóstico de la última ronda que jugó esta persona. Sólo
+   * rellena: no manda nada, para que pueda repasarlo y retocar lo que
+   * quiera antes de guardarlo.
+   */
+  function repetirAnterior() {
+    iniciar(async () => {
+      const r = await pronosticoAnterior(gpId);
+      if (r.ok && r.payload) {
+        const p = r.payload;
+        setQualyEquipos(p.qualy_equipos   ?? vacio(11));
+        setQualyPodio(p.qualy_podio       ?? vacio(3));
+        setCarreraEquipos(p.carrera_equipos ?? vacio(11));
+        setCarreraPodio(p.carrera_podio   ?? vacio(3));
+        setDotd(p.dotd ?? '');
+        setVueltaRapida(p.vuelta_rapida ?? '');
+        setInterrupciones(p.interrupciones?.toString() ?? '');
+        setDnf(p.dnf_dsq?.toString() ?? '');
+        setStints([...(p.stints ?? []), ...vacio(5)].slice(0, 5));
+      }
+      setAviso({ tipo: r.ok ? 'ok' : 'error', texto: r.mensaje });
+    });
+  }
+
   function cambiarComodin(tipo: TipoComodin | null) {
     iniciar(async () => {
       const r = tipo
@@ -110,6 +134,17 @@ export default function FormularioPronostico({
       </p>
 
       {aviso && <div className={`aviso ${aviso.tipo}`}>{aviso.texto}</div>}
+
+      <div className="tarjeta">
+        <label className="suelto">¿Sin tiempo?</label>
+        <p style={{ margin: '0 0 12px', color: 'var(--tenue)', fontSize: 14 }}>
+          Copia tu pronóstico de la ronda anterior y lo tienes listo. Puedes retocar lo que
+          quieras antes de guardarlo; hasta que no le des a guardar no se manda nada.
+        </p>
+        <button className="boton secundario" onClick={repetirAnterior} disabled={pendiente}>
+          {pendiente ? 'Copiando…' : 'Repetir mi pronóstico anterior'}
+        </button>
+      </div>
 
       <Orden titulo="Parrilla de clasificación · por equipo" valores={qualyEquipos} setter={setQualyEquipos} opciones={equipos} />
       <Orden titulo="Podio de clasificación · pilotos" valores={qualyPodio} setter={setQualyPodio} opciones={pilotos} />

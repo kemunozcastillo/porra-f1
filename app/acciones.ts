@@ -39,6 +39,46 @@ export async function guardarPronostico(
   return { ok: true, mensaje: 'Pronóstico guardado.' };
 }
 
+export type RespuestaAnterior = Respuesta & { payload?: Prediccion; ronda?: string };
+
+/**
+ * Devuelve el pronóstico que esta persona mandó en la última ronda
+ * anterior en la que participó, para poder repetirlo sin rehacerlo.
+ *
+ * No guarda nada: rellena el formulario y deja que lo revise y lo mande.
+ * Copiar y enviar de un solo golpe ahorraría un clic a cambio de que
+ * nadie mire lo que está enviando.
+ *
+ * RLS ya deja ver los pronósticos propios sin plazo, así que va con la
+ * sesión de la persona y no con clave de servicio.
+ */
+export async function pronosticoAnterior(gpId: number): Promise<RespuestaAnterior> {
+  const { supabase, user, nombre } = await participanteActual();
+  if (!user) return { ok: false, mensaje: 'Inicia sesión.' };
+  if (!nombre) return { ok: false, mensaje: 'Tu cuenta todavía no está vinculada a un participante.' };
+
+  const { data: gp } = await supabase.from('gps').select('ronda').eq('id', gpId).maybeSingle();
+  if (!gp) return { ok: false, mensaje: 'No existe esa ronda.' };
+
+  const [{ data: mias }, { data: previas }] = await Promise.all([
+    supabase.from('predicciones').select('gp_id, payload').eq('participante', nombre),
+    supabase.from('gps').select('id, ronda, nombre').lt('ronda', gp.ronda).order('ronda', { ascending: false }),
+  ]);
+
+  for (const p of previas ?? []) {
+    const mia = (mias ?? []).find((m) => m.gp_id === p.id);
+    if (!mia) continue;
+    return {
+      ok: true,
+      mensaje: `Copiado tu pronóstico de R${p.ronda} · ${p.nombre}. Revísalo y guárdalo.`,
+      payload: mia.payload as Prediccion,
+      ronda: `R${p.ronda} · ${p.nombre}`,
+    };
+  }
+
+  return { ok: false, mensaje: 'No hay ningún pronóstico tuyo en rondas anteriores que copiar.' };
+}
+
 /**
  * Declara un comodín. Tiene su propio plazo, distinto del pronóstico:
  * el boost a ciegas cierra cuando arranca la FP1. Ese control también
