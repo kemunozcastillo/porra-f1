@@ -66,8 +66,7 @@ export default async function DetalleGP({ params }: { params: Promise<{ slug: st
 
       {provisional && filas.length > 0 && (
         <div className="aviso">
-          Sólo está cargada la clasificación, así que este orden es provisional y todavía no
-          reparte medallas ni puntos F1. Se decide con la carrera.
+          Puntaje provisional, sólo está cargada la clasificación.
         </div>
       )}
 
