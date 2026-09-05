@@ -11,10 +11,11 @@ type Posicion = {
 export default async function PorRonda() {
   const supabase = await clienteServidor();
 
-  const [{ data: gps }, { data: posiciones }, { data: comodines }] = await Promise.all([
+  const [{ data: gps }, { data: posiciones }, { data: comodines }, { data: puntajes }] = await Promise.all([
     supabase.from('gps').select('id, ronda, nombre, slug, tipo, estado, carrera_at').order('ronda'),
     supabase.from('posiciones_gp').select('participante, gp_id, total_gp, posicion, medalla, puntos_f1'),
     supabase.from('comodines').select('participante, tipo, gp_id'),
+    supabase.from('puntajes').select('participante, gp_id, puntos'),
   ]);
 
   const comodinesDe = new Map<number, { participante: string; tipo: string }[]>();
@@ -31,6 +32,26 @@ export default async function PorRonda() {
     porGp.set(p.gp_id, lista);
   });
   porGp.forEach((l) => l.sort((a, b) => a.posicion - b.posicion));
+
+  // Una ronda con sólo la clasificación cargada no tiene posiciones -el
+  // podio espera a la carrera- pero sí puntajes. Se arma un orden
+  // provisional para no dejarla en blanco.
+  const provisionalDe = new Map<number, Posicion[]>();
+  const acumulado = new Map<number, Map<string, number>>();
+  (puntajes ?? []).forEach((p) => {
+    if (porGp.has(p.gp_id)) return;
+    const porNombre = acumulado.get(p.gp_id) ?? new Map<string, number>();
+    porNombre.set(p.participante, (porNombre.get(p.participante) ?? 0) + p.puntos);
+    acumulado.set(p.gp_id, porNombre);
+  });
+  acumulado.forEach((porNombre, gpId) => {
+    provisionalDe.set(gpId, [...porNombre]
+      .map(([participante, total_gp]) => ({
+        participante, gp_id: gpId, total_gp, posicion: 0, medalla: 0, puntos_f1: 0,
+      }))
+      .sort((a, b) => b.total_gp - a.total_gp || a.participante.localeCompare(b.participante))
+      .map((f, i) => ({ ...f, posicion: i + 1 })));
+  });
 
   const fecha = (iso: string | null) =>
     iso ? new Date(iso).toLocaleDateString('es', { day: 'numeric', month: 'short' }) : '';
@@ -52,7 +73,9 @@ export default async function PorRonda() {
       </nav>
 
       {(gps ?? []).map((g) => {
-        const tabla = porGp.get(g.id) ?? [];
+        const definitiva = porGp.get(g.id);
+        const tabla = definitiva ?? provisionalDe.get(g.id) ?? [];
+        const provisional = !definitiva && tabla.length > 0;
         return (
           <div className="tarjeta" key={g.id}>
             <label className="suelto">
@@ -78,15 +101,19 @@ export default async function PorRonda() {
                     </span>
                     <span className="puntos">
                       {p.total_gp}
-                      <span style={{ color: 'var(--tenue)', fontWeight: 400 }}>
-                        {' · '}{p.puntos_f1} pts F1
-                      </span>
+                      {!provisional && (
+                        <span style={{ color: 'var(--tenue)', fontWeight: 400 }}>
+                          {' · '}{p.puntos_f1} pts F1
+                        </span>
+                      )}
                     </span>
                   </div>
                 ))}
                 <div>
-                  <span style={{ color: 'var(--tenue)' }}>
-                    {tabla.length} participantes puntuados
+                  <span style={{ color: provisional ? 'var(--ambar)' : 'var(--tenue)' }}>
+                    {provisional
+                      ? `${tabla.length} puntuados · sólo la clasificación, orden provisional`
+                      : `${tabla.length} participantes puntuados`}
                   </span>
                   <span className="puntos" style={{ fontWeight: 400 }}>
                     <a href={`/gp/${g.slug}`}>ver todo</a>

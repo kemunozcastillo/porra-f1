@@ -35,19 +35,50 @@ export default async function DetalleGP({ params }: { params: Promise<{ slug: st
   const puntajeGpDe = new Map(soloGp.map((p) => [p.participante, p.puntos as number]));
   const comodinDe = new Map((comodines ?? []).map((c) => [c.participante, c.tipo as string]));
 
+  // Con sólo la clasificación cargada, `posiciones_gp` está vacía a
+  // propósito: el podio de la ronda espera a la carrera. Pero los
+  // puntajes sí existen, así que se muestran igual en un orden
+  // provisional, sin medallas ni puntos F1, que es lo que todavía no
+  // está decidido.
+  const provisional = !posiciones?.length;
+  const totalPorParticipante = new Map<string, number>();
+  (puntajes ?? []).forEach((p) => {
+    totalPorParticipante.set(
+      p.participante,
+      (totalPorParticipante.get(p.participante) ?? 0) + (p.puntos as number)
+    );
+  });
+
+  const filas = provisional
+    ? [...totalPorParticipante]
+        .map(([participante, total_gp]) => ({
+          participante, total_gp,
+          posicion: 0, medalla: 0, puntos_f1: 0,
+        }))
+        .sort((a, b) => b.total_gp - a.total_gp || a.participante.localeCompare(b.participante))
+        .map((f, i) => ({ ...f, posicion: i + 1 }))
+    : posiciones!;
+
   return (
     <>
       <p className="rotulo">Ronda {gp.ronda} · {gp.circuito} · {gp.tipo === 'sprint' ? 'fin de semana sprint' : 'formato normal'}</p>
       <h1 className="titulo">{gp.nombre}</h1>
 
-      {!posiciones?.length ? (
+      {provisional && filas.length > 0 && (
+        <div className="aviso">
+          Sólo está cargada la clasificación, así que este orden es provisional y todavía no
+          reparte medallas ni puntos F1. Se decide con la carrera.
+        </div>
+      )}
+
+      {filas.length === 0 ? (
         <div className="vacio">Esta ronda todavía no tiene resultados publicados.</div>
       ) : (
         <div className="torre">
-          {posiciones.map((f) => {
+          {filas.map((f) => {
             const detalle = (detalleDe.get(f.participante) ?? {}) as Record<string, number>;
             return (
-              <details key={f.participante} className={`fila ${f.posicion === 1 ? 'lider' : f.posicion <= 3 ? 'podio' : ''}`} style={{ display: 'block' }}>
+              <details key={f.participante} className={`fila ${provisional ? '' : f.posicion === 1 ? 'lider' : f.posicion <= 3 ? 'podio' : ''}`} style={{ display: 'block' }}>
                 <summary style={{ display: 'grid', gridTemplateColumns: '44px 1fr auto auto', gap: 14, alignItems: 'center', cursor: 'pointer', listStyle: 'none' }}>
                   <span className="pos">{f.posicion}</span>
                   <span className="nombre">
@@ -58,7 +89,7 @@ export default async function DetalleGP({ params }: { params: Promise<{ slug: st
                       </span>
                     )}
                   </span>
-                  <span className="gap">{f.puntos_f1 ? `${f.puntos_f1} pts F1` : ''}</span>
+                  <span className="gap">{!provisional && f.puntos_f1 ? `${f.puntos_f1} pts F1` : ''}</span>
                   <span className="total">{f.total_gp}</span>
                 </summary>
                 <div className="desglose" style={{ marginTop: 12 }}>
