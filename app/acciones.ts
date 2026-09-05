@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { clienteServidor, clienteAdmin } from '@/lib/supabase';
-import { recalcularGP } from '@/lib/recalcular';
+import { recalcularGP, recalcularTemporada } from '@/lib/recalcular';
 import type { Prediccion, Resultado, Sesion } from '@/lib/puntaje';
 import { validarPrediccion, type Catalogos } from '@/lib/prediccion-json';
 
@@ -164,6 +164,26 @@ export async function publicarResultado(
       ? `${que} guardada. ${filas} puntajes recalculados y medallas repartidas.`
       : `${que} guardada. ${filas} puntajes recalculados. Las medallas y los puntos F1 esperan a la carrera.`,
   };
+}
+
+/**
+ * Rehace los puntajes de la temporada entera desde los pronósticos y los
+ * resultados guardados.
+ *
+ * Hace falta cuando cambia algo que el recálculo por ronda no toca: una
+ * regla de puntuación, un participante que se va, una corrección masiva.
+ * Es idempotente y no destruye nada que no se pueda volver a derivar,
+ * pero recorre las 24 rondas, así que tarda unos segundos.
+ */
+export async function recalcularTodo(): Promise<Respuesta> {
+  const no = await soloAdmin();
+  if (no) return { ok: false, mensaje: no };
+
+  const { filas } = await recalcularTemporada();
+  revalidatePath('/');
+  revalidatePath('/gp');
+  revalidatePath('/admin');
+  return { ok: true, mensaje: `Temporada recalculada: ${filas} puntajes.` };
 }
 
 // ------------------------------------------------------------------

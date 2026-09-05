@@ -4,6 +4,7 @@ import CargarPronosticoIA from '@/components/CargarPronosticoIA';
 import VincularCuentas, { type Perfil, type Participante } from '@/components/VincularCuentas';
 import type { Resultado } from '@/lib/puntaje';
 import QuienFalta from '@/components/QuienFalta';
+import RecalcularTemporada from '@/components/RecalcularTemporada';
 
 export const dynamic = 'force-dynamic';
 
@@ -147,6 +148,7 @@ export default async function Admin({
             compuestos={compuestos ?? []}
             resultados={(resultados ?? []) as { gp_id: number; sesion: string; payload: Partial<Resultado> }[]}
           />
+          <RecalcularTemporada />
         </>
       )}
     </>
