@@ -5,7 +5,7 @@ export const revalidate = 60;
 type FilaAcumulado = {
   participante: string; tipo: string; total: number;
   puntos_sesiones: number; puntos_medallas: number; puntos_boost: number;
-  oros: number; platas: number; bronces: number;
+  oros: number; platas: number; bronces: number; cuartos: number;
 };
 
 type FilaF1 = {
@@ -19,6 +19,9 @@ type FilaMedallero = {
 };
 
 type Fila = FilaAcumulado | FilaF1 | FilaMedallero;
+
+/** Lo que hace falta para desempatar por criterio olímpico. */
+type Medallable = { oros?: number; platas?: number; bronces?: number; cuartos?: number };
 
 /**
  * Las medallas se leen en el mismo orden que las ordena: oro, plata,
@@ -109,11 +112,33 @@ export default async function Clasificacion({
     { valor: 'boost_ciegas',  rotulo: 'A ciegas', color: 'var(--ambar)' },
   ] as const;
 
+  // El orden se decide aquí y no en el `order by` de la vista, por dos
+  // razones. PostgREST no garantiza que ese orden sobreviva a la
+  // consulta, que es de donde salía que dos empatados a puntos
+  // aparecieran en cualquier orden. Y así la regla se lee de un vistazo
+  // en vez de estar enterrada en SQL.
+  //
+  // `?? 0` para que una vista sin `cuartos` degrade en lugar de romper.
+  const porMedallas = (a: Medallable, b: Medallable) =>
+    (b.oros ?? 0)    - (a.oros ?? 0)
+    || (b.platas ?? 0)  - (a.platas ?? 0)
+    || (b.bronces ?? 0) - (a.bronces ?? 0)
+    || (b.cuartos ?? 0) - (a.cuartos ?? 0);
+
+  const desempate = (a: Fila, b: Fila) => a.participante.localeCompare(b.participante);
+
   const filas: Fila[] = esMedallero
-    ? ((medallero.data ?? []) as FilaMedallero[])
+    ? [...((medallero.data ?? []) as FilaMedallero[])]
+        .sort((a, b) => porMedallas(a, b) || desempate(a, b))
     : esF1
-      ? ((campeonato.data ?? []) as FilaF1[])
-      : ((acumulado.data ?? []) as FilaAcumulado[]);
+      ? [...((campeonato.data ?? []) as FilaF1[])].sort((a, b) =>
+          b.puntos - a.puntos
+          || b.victorias - a.victorias
+          || b.podios - a.podios
+          || desempate(a, b))
+      // Empate a puntos en el acumulado: manda el medallero.
+      : [...((acumulado.data ?? []) as FilaAcumulado[])].sort((a, b) =>
+          b.total - a.total || porMedallas(a, b) || desempate(a, b));
 
   const valorDe = (f: Fila) =>
     esMedallero ? (f as FilaMedallero).oros
