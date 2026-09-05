@@ -142,10 +142,10 @@ export default function FormularioResultado({ gps, equipos, pilotos, compuestos,
         </div>
         <p style={{ margin: '10px 0 0', color: 'var(--tenue)', fontSize: 13 }}>
           {tieneCarrera
-            ? 'Esta sesión está completa. Lo que guardes corrige sólo el bloque elegido.'
+            ? 'Sesión completa. Se corrige sólo el bloque elegido.'
             : tieneQualy
-              ? 'La clasificación ya está cargada. Las medallas y los puntos F1 de la ronda se reparten en cuanto guardes la carrera.'
-              : 'Todavía no hay nada cargado en esta sesión.'}
+              ? 'Clasificación cargada. Falta la carrera.'
+              : 'Nada cargado en esta sesión.'}
         </p>
       </div>
 

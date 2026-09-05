@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from 'react';
 import { cargarPronosticoIA, generarPronosticoReplica } from '@/app/acciones';
 import { plantillaPrediccion, type Catalogos } from '@/lib/prediccion-json';
 
-interface Props {
+  interface Props {
   gps: { id: number; ronda: number; nombre: string; tipo: string }[];
   ias: string[];
   catalogos: Catalogos;
@@ -81,7 +81,7 @@ export default function CargarPronosticoIA({ gps, ias, catalogos }: Props) {
       <div className="tarjeta">
         <label className="suelto">1 · Lo que le pasas a la IA</label>
         <p style={{ color: 'var(--tenue)', fontSize: 14, margin: '0 0 12px' }}>
-          Incluye la plantilla y los nombres admitidos, para que no invente equipos ni pilotos.
+          Lleva incrustados los nombres admitidos.
         </p>
         <textarea readOnly value={instrucciones} rows={10}
                   aria-label="Instrucciones para la IA"
@@ -94,8 +94,7 @@ export default function CargarPronosticoIA({ gps, ias, catalogos }: Props) {
       <div className="tarjeta">
         <label className="suelto" htmlFor="ia-json">2 · Lo que te devolvió</label>
         <p style={{ color: 'var(--tenue)', fontSize: 14, margin: '0 0 12px' }}>
-          Pega el JSON tal cual. Si trae un bloque de código alrededor, quítalo.
-          Los nombres se corrigen solos cuando la diferencia es de acentos o mayúsculas.
+          Pega el JSON tal cual. Acentos y mayúsculas se corrigen solos.
         </p>
         <textarea id="ia-json" value={texto} rows={10}
                   onChange={(e) => { setTexto(e.target.value); setRes(null); }}

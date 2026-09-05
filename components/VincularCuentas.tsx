@@ -17,7 +17,7 @@ export interface Participante {
   perfil_id: string | null;
 }
 
-interface Props {
+  interface Props {
   perfiles: Perfil[];
   participantes: Participante[];
 }
@@ -52,8 +52,7 @@ export default function VincularCuentas({ perfiles, participantes }: Props) {
 
       {perfiles.length === 0 ? (
         <div className="vacio">
-          Todavía no ha entrado nadie con Discord. La fila aparece aquí sola en cuanto alguien
-          inicia sesión por primera vez.
+          Todavía no ha entrado nadie con Discord.
         </div>
       ) : (
         perfiles.map((pe) => {
@@ -115,10 +114,6 @@ export default function VincularCuentas({ perfiles, participantes }: Props) {
           <label className="suelto">Participantes sin cuenta ({sinCuenta.length})</label>
           <p style={{ margin: 0, color: 'var(--tenue)', fontSize: 14 }}>
             {sinCuenta.map((p) => p.nombre).join(' · ')}
-          </p>
-          <p style={{ margin: '10px 0 0', color: 'var(--tenue)', fontSize: 13 }}>
-            Siguen puntuando con lo que ya tenían cargado, pero no pueden enviar pronósticos
-            nuevos hasta que entren con Discord y los asocies.
           </p>
         </div>
       )}

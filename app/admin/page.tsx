@@ -95,8 +95,7 @@ export default async function Admin({
       {enFaltan ? (
         <>
           <p className="subtitulo">
-            Quién ha mandado su pronóstico y quién no, para saber a quién dar un toque antes
-            del cierre. Arranca en la ronda abierta.
+            Quién ha mandado su pronóstico y quién no.
           </p>
           <QuienFalta
             gps={(gps ?? []) as { id: number; ronda: number; nombre: string; estado: string; cierra_at: string | null }[]}
@@ -108,8 +107,7 @@ export default async function Admin({
       ) : enCuentas ? (
         <>
           <p className="subtitulo">
-            Cada persona entra una vez con Discord y su cuenta aparece aquí sola. Hasta que la
-            asocies con su nombre en la porra puede iniciar sesión, pero no enviar pronósticos.
+            Las cuentas aparecen solas al entrar por primera vez con Discord.
           </p>
           <VincularCuentas
             perfiles={(perfiles ?? []) as Perfil[]}
@@ -119,9 +117,7 @@ export default async function Admin({
       ) : enIA ? (
         <>
           <p className="subtitulo">
-            Las IAs no tienen cuenta, así que sus pronósticos los cargas tú. Copia la plantilla,
-            pídesela a cada una y pega lo que devuelvan. Réplica no pronostica: copia el
-            resultado de la ronda anterior con un botón.
+            Copia la plantilla, pídesela a cada IA y pega lo que devuelva. Réplica tiene su propio botón.
           </p>
           <CargarPronosticoIA
             gps={gps ?? []}
@@ -136,10 +132,7 @@ export default async function Admin({
       ) : (
         <>
           <p className="subtitulo">
-            La clasificación y la carrera se cargan por separado, cuando toque cada una. Al
-            guardar se recalculan los puntajes de la ronda; las medallas y los puntos F1 esperan
-            a que esté la carrera, porque hasta entonces el orden sería provisional. Se puede
-            corregir y volver a publicar las veces que haga falta.
+            La clasificación y la carrera se cargan por separado. Se puede corregir cuantas veces haga falta.
           </p>
           <FormularioResultado
             gps={gps ?? []}

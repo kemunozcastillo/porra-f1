@@ -157,12 +157,12 @@ export default async function Clasificacion({
       : esF1 ? <>Campeonato<br />paralelo</> : <>La tabla<br />no miente</>;
 
   const subtitulo = esBoosts
-    ? 'Un boost y un boost a ciegas por temporada, y una vez quemados no vuelven. Los dos duplican el puntaje del Gran Premio: en un fin de semana con sprint, el sprint no se dobla. La columna de la derecha es lo que sumó cada uno.'
+    ? 'Lo que sumó cada comodín quemado.'
     : esMedallero
-      ? 'Criterio olímpico: manda quien más rondas ganó. Un oro vale más que cualquier cantidad de platas, y una plata más que cualquier cantidad de bronces. Si hay empate se baja a los cuartos puestos.'
+      ? 'Criterio olímpico: primero los oros, después platas y bronces.'
       : esF1
-        ? 'Puntos de F1 según tu posición en cada ronda: 25 al que gana el fin de semana, 18 al segundo, y así hasta el décimo. Ganar por un punto vale lo mismo que ganar por cuarenta.'
-        : 'Suma de todo lo que acertaste, más las medallas por ganar una ronda y el boost si lo quemaste.';
+        ? 'Escala de la F1 según la posición de cada ronda: 25-18-15-12-10-8-6-4-2-1.'
+        : 'Todo lo acertado, más las medallas de ronda y el boost.';
 
   return (
     <>

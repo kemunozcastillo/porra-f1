@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { recalcularTodo } from '@/app/acciones';
 
-/**
+  /**
  * Rehacer la temporada entera es idempotente y no pierde nada: todo sale
  * de los pronósticos y los resultados guardados. Pero recorre las 24
  * rondas y tarda, así que pide confirmación en vez de dispararse de un
@@ -23,10 +23,7 @@ export default function RecalcularTemporada() {
     <div className="tarjeta" style={{ marginTop: 28 }}>
       <label className="suelto">Recalcular la temporada</label>
       <p style={{ margin: '0 0 12px', color: 'var(--tenue)', fontSize: 14 }}>
-        Rehace los puntajes de las 24 rondas desde los pronósticos y los resultados guardados.
-        No hace falta después de publicar un resultado —eso ya recalcula su ronda—, sino cuando
-        cambia algo de fondo: una regla de puntuación o un participante que se va. Tarda unos
-        segundos.
+        Rehace los puntajes de las 24 rondas. Tarda unos segundos.
       </p>
 
       {aviso && (

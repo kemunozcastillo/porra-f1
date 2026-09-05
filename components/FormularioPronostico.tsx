@@ -138,8 +138,7 @@ export default function FormularioPronostico({
       <div className="tarjeta">
         <label className="suelto">¿Sin tiempo?</label>
         <p style={{ margin: '0 0 12px', color: 'var(--tenue)', fontSize: 14 }}>
-          Copia tu pronóstico de la ronda anterior y lo tienes listo. Puedes retocar lo que
-          quieras antes de guardarlo; hasta que no le des a guardar no se manda nada.
+          Se copia en el formulario. No se manda hasta que guardes.
         </p>
         <button className="boton secundario" onClick={repetirAnterior} disabled={pendiente}>
           {pendiente ? 'Copiando…' : 'Repetir mi pronóstico anterior'}

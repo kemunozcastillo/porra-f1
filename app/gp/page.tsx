@@ -3,7 +3,7 @@ import { clienteServidor } from '@/lib/supabase';
 export const revalidate = 60;
 export const metadata = { title: 'Por ronda · Porra F1' };
 
-type Posicion = {
+  type Posicion = {
   participante: string; gp_id: number;
   total_gp: number; posicion: number; medalla: number; puntos_f1: number;
 };
@@ -61,8 +61,7 @@ export default async function PorRonda() {
       <p className="rotulo">Temporada 2026</p>
       <h1 className="titulo">Ronda<br />por ronda</h1>
       <p className="subtitulo">
-        El puntaje de cada fin de semana y los puntos de F1 que repartió. Entra en una ronda
-        para ver el desglose de cada participante, casillero por casillero.
+        El puntaje de cada fin de semana y los puntos F1 que repartió.
       </p>
 
       <nav className="nav" style={{ marginBottom: 22 }}>
