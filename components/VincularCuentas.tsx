@@ -17,7 +17,7 @@ export interface Participante {
   perfil_id: string | null;
 }
 
-  interface Props {
+interface Props {
   perfiles: Perfil[];
   participantes: Participante[];
 }

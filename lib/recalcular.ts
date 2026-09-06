@@ -99,6 +99,13 @@ export async function recalcularGP(gpId: number) {
     { onConflict: 'participante,gp_id' }
   );
 
+  // Con la carrera dentro, la ronda está cerrada del todo. Nadie mantenía
+  // `estado`: venía puesto de la migración del Excel y se quedaba en
+  // `abierto` para siempre, así que la tira de la portada no marcaba la
+  // ronda como jugada ni subía el contador de rondas disputadas.
+  await db.from('gps').update({ estado: 'finalizado' })
+    .eq('id', gpId).neq('estado', 'finalizado');
+
   return { filas: filas.length, podio: true };
 }
 

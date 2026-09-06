@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react';
 import { recalcularTodo } from '@/app/acciones';
 
-  /**
+/**
  * Rehacer la temporada entera es idempotente y no pierde nada: todo sale
  * de los pronósticos y los resultados guardados. Pero recorre las 24
  * rondas y tarda, así que pide confirmación en vez de dispararse de un

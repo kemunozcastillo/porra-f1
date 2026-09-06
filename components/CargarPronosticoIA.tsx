@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from 'react';
 import { cargarPronosticoIA, generarPronosticoReplica } from '@/app/acciones';
 import { plantillaPrediccion, type Catalogos } from '@/lib/prediccion-json';
 
-  interface Props {
+interface Props {
   gps: { id: number; ronda: number; nombre: string; tipo: string }[];
   ias: string[];
   catalogos: Catalogos;
