@@ -210,18 +210,45 @@ async function soloAdmin() {
   return perfil?.es_admin ? null : 'Necesitas permisos de admin.';
 }
 
-async function catalogos(): Promise<Catalogos> {
+/**
+ * Catálogos contra los que se valida lo que devuelve una IA.
+ *
+ * Un catálogo vacío no puede validar nada: todos los nombres darían
+ * «no está en el catálogo» y el aviso culparía al JSON de un fallo que
+ * no es suyo. Antes se tragaba el error con `?? []` y pasaba
+ * exactamente eso. Ahora un catálogo vacío o una consulta fallida
+ * detienen la carga y lo dicen.
+ */
+async function catalogos(): Promise<{ cat?: Catalogos; error?: string }> {
   const db = clienteAdmin();
-  const [{ data: eq }, { data: pi }, { data: co }] = await Promise.all([
+  const [eq, pi, co] = await Promise.all([
     db.from('equipos').select('nombre').eq('activo', true).order('nombre'),
     db.from('pilotos').select('nombre').eq('activo', true).order('nombre'),
     db.from('compuestos').select('codigo'),
   ]);
-  return {
-    equipos: (eq ?? []).map((e) => e.nombre as string),
-    pilotos: (pi ?? []).map((p) => p.nombre as string),
-    compuestos: (co ?? []).map((c) => c.codigo as string),
+
+  const fallos = ([['equipos', eq], ['pilotos', pi], ['compuestos', co]] as const)
+    .filter(([, r]) => r.error)
+    .map(([nombre, r]) => `${nombre}: ${r.error!.message}`);
+  if (fallos.length) {
+    return { error: `No se pudo leer el catálogo (${fallos.join('; ')}). No se validó nada.` };
+  }
+
+  const cat: Catalogos = {
+    equipos: (eq.data ?? []).map((e) => e.nombre as string),
+    pilotos: (pi.data ?? []).map((p) => p.nombre as string),
+    compuestos: (co.data ?? []).map((c) => c.codigo as string),
   };
+
+  const vacios = (Object.keys(cat) as (keyof Catalogos)[]).filter((k) => cat[k].length === 0);
+  if (vacios.length) {
+    return {
+      error: `El catálogo de ${vacios.join(' y ')} llegó vacío, así que no se pudo comprobar nada. `
+           + 'No es culpa del JSON: vuelve a intentarlo.',
+    };
+  }
+
+  return { cat };
 }
 
 export type RespuestaCarga = Respuesta & { errores?: string[]; avisos?: string[] };
@@ -240,7 +267,10 @@ export async function cargarPronosticoIA(
     return { ok: false, mensaje: 'El texto no es JSON válido.', errores: [String(e)] };
   }
 
-  const v = validarPrediccion(bruto, await catalogos());
+  const { cat, error: errorCat } = await catalogos();
+  if (!cat) return { ok: false, mensaje: errorCat! };
+
+  const v = validarPrediccion(bruto, cat);
   if (!v.ok) {
     return {
       ok: false,
