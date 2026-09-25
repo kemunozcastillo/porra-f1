@@ -205,6 +205,7 @@ h1.titulo {
 }
 .comodin[data-tipo='boost']        { color: var(--violeta); }
 .comodin[data-tipo='boost_ciegas'] { color: var(--ambar); }
+.comodin[data-tipo='cambio']       { color: var(--verde); }
 
 /* Filtro por tipo de comodin. El estado activo va en la URL y no en el
    cliente: asi el enlace filtrado se puede compartir y la vuelta atras

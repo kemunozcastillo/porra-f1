@@ -1,5 +1,7 @@
 import { clienteServidor } from '@/lib/supabase';
 import FormularioPronostico from '@/components/FormularioPronostico';
+import ComodinCambio from '@/components/ComodinCambio';
+import type { Prediccion } from '@/lib/puntaje';
 import type { TipoComodin } from '@/app/acciones';
 
 export const dynamic = 'force-dynamic';
@@ -63,6 +65,19 @@ export default async function Pronostico() {
   const disponibles = (['boost', 'boost_ciegas'] as TipoComodin[]).filter((c) => !quemados.has(c));
   const declarado = (comodines ?? []).find((c) => c.gp_id === gp.id)?.tipo as TipoComodin | undefined;
 
+  // El Cambio vive en una ventana propia: fin de semana sin sprint, con
+  // la clasificación ya corrida y antes de que largue la carrera. Los
+  // plazos de verdad los impone RLS; esto sólo decide si se enseña.
+  const ahoraD = new Date();
+  const puedeCambiar =
+    gp.tipo === 'normal'
+    && !!gp.qualy_at && !!gp.carrera_at
+    && ahoraD > new Date(gp.qualy_at)
+    && ahoraD < new Date(gp.carrera_at)
+    && !!previa
+    && !quemados.has('cambio')
+    && !declarado;
+
   return (
     <>
       <h1 className="titulo">R{gp.ronda}<br />{gp.nombre}</h1>
@@ -93,6 +108,17 @@ export default async function Pronostico() {
         declarado={declarado ?? null}
         fp1={gp.fp1_at ?? null}
       />
+
+      {puedeCambiar && (
+        <ComodinCambio
+          gpId={gp.id}
+          equipos={(equipos ?? []).map((e) => e.nombre)}
+          pilotos={(pilotos ?? []).map((p) => p.nombre)}
+          compuestos={compuestos ?? []}
+          actual={previa!.payload as Partial<Prediccion>}
+          carrera={gp.carrera_at}
+        />
+      )}
     </>
   );
 }

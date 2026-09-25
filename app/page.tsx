@@ -99,17 +99,20 @@ export default async function Clasificacion({
       participante: c.participante as string,
       tipo: c.tipo as string,
       gp: gpPorId.get(c.gp_id),
-      puntos: puntajeGpDe.get(`${c.participante}|${c.gp_id}`),
+      // El Cambio no suma: sólo deja reescribir la carrera. `null` lo
+      // distingue de una ronda que aún no se corrió, que es `undefined`.
+      puntos: c.tipo === 'cambio' ? null : puntajeGpDe.get(`${c.participante}|${c.gp_id}`),
     }))
     .sort((a, b) => (b.puntos ?? -1) - (a.puntos ?? -1));
 
-  const filtroTipo = tipo === 'boost' || tipo === 'boost_ciegas' ? tipo : null;
+  const filtroTipo = tipo === 'boost' || tipo === 'boost_ciegas' || tipo === 'cambio' ? tipo : null;
   const boosts = filtroTipo ? todosLosBoosts.filter((b) => b.tipo === filtroTipo) : todosLosBoosts;
 
   const FILTROS = [
     { valor: null,            rotulo: 'Todos',    color: 'var(--texto)' },
     { valor: 'boost',         rotulo: 'Normal',   color: 'var(--violeta)' },
     { valor: 'boost_ciegas',  rotulo: 'A ciegas', color: 'var(--ambar)' },
+    { valor: 'cambio',        rotulo: 'Cambio',   color: 'var(--verde)' },
   ] as const;
 
   // El orden se decide aquí y no en el `order by` de la vista, por dos
@@ -207,7 +210,7 @@ export default async function Clasificacion({
                 <div className="nombre">
                   {b.participante}
                   <span className="comodin" data-tipo={b.tipo}>
-                    {b.tipo === 'boost_ciegas' ? 'A CIEGAS' : 'NORMAL'}
+                    {b.tipo === 'boost_ciegas' ? 'A CIEGAS' : b.tipo === 'cambio' ? 'CAMBIO' : 'NORMAL'}
                   </span>
                 </div>
                 <div className="gap">
@@ -216,9 +219,11 @@ export default async function Clasificacion({
                   ) : 'ronda desconocida'}
                 </div>
                 <div className="total">
-                  {b.puntos === undefined
-                    ? <span style={{ fontSize: 13, color: 'var(--tenue)' }}>sin correr</span>
-                    : <>+{b.puntos}</>}
+                  {b.puntos === null
+                    ? <span style={{ fontSize: 13, color: 'var(--tenue)' }}>no suma</span>
+                    : b.puntos === undefined
+                      ? <span style={{ fontSize: 13, color: 'var(--tenue)' }}>sin correr</span>
+                      : <>+{b.puntos}</>}
                 </div>
               </div>
             ))}

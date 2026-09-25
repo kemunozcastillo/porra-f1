@@ -120,10 +120,14 @@ export default async function PorRonda() {
                 </div>
                 {(comodinesDe.get(g.id) ?? []).map((c) => (
                   <div key={`${c.participante}|${c.tipo}`}>
-                    <span style={{ color: c.tipo === 'boost_ciegas' ? 'var(--ambar)' : 'var(--violeta)' }}>
-                      {c.tipo === 'boost_ciegas' ? 'Boost a ciegas' : 'Boost'} · {c.participante}
+                    <span style={{ color: c.tipo === 'boost_ciegas' ? 'var(--ambar)'
+                                        : c.tipo === 'cambio' ? 'var(--verde)' : 'var(--violeta)' }}>
+                      {c.tipo === 'boost_ciegas' ? 'Boost a ciegas'
+                        : c.tipo === 'cambio' ? 'Cambio' : 'Boost'} · {c.participante}
                     </span>
-                    <span className="puntos" style={{ fontWeight: 400, color: 'var(--tenue)' }}>×2 GP</span>
+                    <span className="puntos" style={{ fontWeight: 400, color: 'var(--tenue)' }}>
+                      {c.tipo === 'cambio' ? 'rehizo la carrera' : '×2 GP'}
+                    </span>
                   </div>
                 ))}
               </div>

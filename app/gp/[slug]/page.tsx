@@ -84,7 +84,8 @@ export default async function DetalleGP({ params }: { params: Promise<{ slug: st
                     {f.participante}
                     {comodinDe.has(f.participante) && (
                       <span className="comodin" data-tipo={comodinDe.get(f.participante)}>
-                        {comodinDe.get(f.participante) === 'boost_ciegas' ? 'BOOST A CIEGAS' : 'BOOST'}
+                        {comodinDe.get(f.participante) === 'boost_ciegas' ? 'BOOST A CIEGAS'
+                          : comodinDe.get(f.participante) === 'cambio' ? 'CAMBIO' : 'BOOST'}
                       </span>
                     )}
                   </span>
@@ -98,7 +99,13 @@ export default async function DetalleGP({ params }: { params: Promise<{ slug: st
                       <span className="puntos" data-cero={valor === 0 ? 'si' : 'no'}>{valor}</span>
                     </div>
                   ))}
-                  {comodinDe.has(f.participante) && (
+                  {comodinDe.get(f.participante) === 'cambio' && (
+                    <div>
+                      <span style={{ color: 'var(--verde)' }}>Cambio · rehizo la carrera</span>
+                      <span className="puntos" data-cero="si">0</span>
+                    </div>
+                  )}
+                  {comodinDe.has(f.participante) && comodinDe.get(f.participante) !== 'cambio' && (
                     <div>
                       <span style={{ color: comodinDe.get(f.participante) === 'boost_ciegas' ? 'var(--ambar)' : 'var(--violeta)' }}>
                         {comodinDe.get(f.participante) === 'boost_ciegas' ? 'Boost a ciegas' : 'Boost'}

@@ -404,3 +404,75 @@ export async function desvincularParticipante(participante: string): Promise<Res
   revalidatePath('/');
   return { ok: true, mensaje: `${participante} quedó sin cuenta asociada.` };
 }
+
+// ------------------------------------------------------------------
+// Comodín Cambio
+// ------------------------------------------------------------------
+
+/** Lo que el Cambio deja reescribir: todo lo que puntúa con la carrera. */
+export type CarreraEditable = Pick<
+  Prediccion,
+  'carrera_equipos' | 'carrera_podio' | 'dotd' | 'vuelta_rapida'
+  | 'interrupciones' | 'dnf_dsq' | 'stints'
+>;
+
+/**
+ * Rehace el pronóstico de carrera con la clasificación ya corrida.
+ * Uno por temporada, y sólo en fines de semana sin sprint.
+ *
+ * El comodín se declara con la sesión de la persona, así que los plazos
+ * y el «uno por temporada» los impone RLS y no esta función. La
+ * reescritura, en cambio, va con clave de servicio: la edición libre
+ * está cerrada desde el cierre del pronóstico, y así el servidor es el
+ * único que puede escribir después, tocando sólo los casilleros de
+ * carrera. La clasificación queda intacta, que es lo que evita
+ * corregirla con el resultado delante.
+ *
+ * `enviado_at` tampoco se toca, a propósito: los bloques de
+ * clasificación se ganaron mandando a tiempo y se siguen cobrando.
+ */
+export async function usarCambio(
+  gpId: number, datos: CarreraEditable
+): Promise<Respuesta> {
+  const { supabase, user, nombre } = await participanteActual();
+  if (!user) return { ok: false, mensaje: 'Inicia sesión.' };
+  if (!nombre) return { ok: false, mensaje: 'Tu cuenta todavía no está vinculada a un participante.' };
+
+  const { data: gp } = await supabase.from('gps')
+    .select('tipo, qualy_at, carrera_at, nombre').eq('id', gpId).maybeSingle();
+  if (!gp) return { ok: false, mensaje: 'No existe esa ronda.' };
+  if (gp.tipo !== 'normal') {
+    return { ok: false, mensaje: 'El Cambio no se puede usar en un fin de semana con sprint.' };
+  }
+
+  const { data: previa } = await supabase.from('predicciones')
+    .select('payload').eq('participante', nombre).eq('gp_id', gpId).maybeSingle();
+  if (!previa) {
+    return { ok: false, mensaje: 'No tienes pronóstico en esta ronda, así que no hay nada que cambiar.' };
+  }
+
+  // El plazo, el uno por temporada y el uno por ronda los decide RLS.
+  const { error } = await supabase.from('comodines')
+    .insert({ participante: nombre, tipo: 'cambio', gp_id: gpId });
+
+  if (error) {
+    if (error.code === '23505') {
+      return { ok: false, mensaje: 'Ya usaste el Cambio esta temporada, o ya tienes otro comodín en esta ronda.' };
+    }
+    return {
+      ok: false,
+      mensaje: 'El Cambio sólo se puede usar entre el final de la clasificación y la largada de la carrera.',
+    };
+  }
+
+  const payload = { ...(previa.payload as Prediccion), ...datos };
+  const { error: errorGuardar } = await clienteAdmin().from('predicciones')
+    .update({ payload }).eq('participante', nombre).eq('gp_id', gpId);
+  if (errorGuardar) {
+    return { ok: false, mensaje: `El comodín quedó declarado pero no se pudo guardar: ${errorGuardar.message}` };
+  }
+
+  revalidatePath('/pronostico');
+  revalidatePath('/');
+  return { ok: true, mensaje: `Carrera rehecha con el Cambio. Te queda quemado por la temporada.` };
+}

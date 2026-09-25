@@ -83,8 +83,25 @@ export default function Reglas() {
       <div className="tarjeta">
         <label className="suelto">Comodines</label>
         <p style={{ margin: 0 }}>
-          Tienes un <strong>boost</strong> y un <strong>boost a ciegas</strong> por temporada.
-          Cualquiera de los dos duplica el puntaje de esa ronda. Una vez que lo quemas, no vuelve.
+          Uno de cada por temporada, y uno solo por ronda. Una vez quemado, no vuelve.
+        </p>
+        <div className="desglose" style={{ marginTop: 12 }}>
+          <div>
+            <span><strong>Boost</strong> · se declara con el pronóstico</span>
+            <span className="puntos">×2 al GP</span>
+          </div>
+          <div>
+            <span><strong>Boost a ciegas</strong> · cierra al arrancar la FP1</span>
+            <span className="puntos">×2 al GP</span>
+          </div>
+          <div>
+            <span><strong>Cambio</strong> · rehace la carrera con la clasificación corrida</span>
+            <span className="puntos" data-cero="si">0</span>
+          </div>
+        </div>
+        <p style={{ color: 'var(--tenue)', fontSize: 14, marginBottom: 0 }}>
+          El Cambio sólo corre en fines de semana sin sprint, y cierra cuando larga la carrera.
+          No toca tu pronóstico de clasificación, que sigue puntuando.
         </p>
       </div>
 
