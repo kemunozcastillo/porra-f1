@@ -82,10 +82,9 @@ export default async function Pronostico() {
     <>
       <h1 className="titulo">R{gp.ronda}<br />{gp.nombre}</h1>
 
-      {new Date() > new Date(gp.cierra_at) && (
+      {ahoraD > new Date(gp.cierra_at) && !previa && (
         <div className="aviso">
-          El cierre ya pasó. Puedes enviarlo igual, pero lo que ya se corrió no puntúa:
-          se cuenta sólo lo que falta del fin de semana.
+          El cierre ya pasó. Puedes enviarlo, pero lo ya corrido no puntúa.
         </div>
       )}
 
@@ -107,6 +106,8 @@ export default async function Pronostico() {
         disponibles={disponibles}
         declarado={declarado ?? null}
         fp1={gp.fp1_at ?? null}
+        qualyCorrida={!!gp.qualy_at && ahoraD > new Date(gp.qualy_at)}
+        soloLectura={ahoraD > new Date(gp.cierra_at) && !!previa}
       />
 
       {puedeCambiar && (

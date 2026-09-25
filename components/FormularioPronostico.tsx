@@ -18,13 +18,17 @@ interface Props {
   declarado: TipoComodin | null;
   /** Arranque de FP1: plazo del boost a ciegas. Null = no se puede declarar. */
   fp1: string | null;
+  /** La clasificación ya se corrió: esos casilleros ya no puntúan. */
+  qualyCorrida: boolean;
+  /** Cierre pasado y con pronóstico enviado: la base ya no acepta cambios. */
+  soloLectura: boolean;
 }
 
 const vacio = (n: number) => Array.from({ length: n }, () => '');
 
 export default function FormularioPronostico({
   gpId, gpNombre, cierra, equipos, pilotos, compuestos,
-  inicial = {}, disponibles, declarado, fp1,
+  inicial = {}, disponibles, declarado, fp1, qualyCorrida, soloLectura,
 }: Props) {
   const [qualyEquipos,   setQualyEquipos]   = useState<string[]>(inicial.qualy_equipos   ?? vacio(11));
   const [qualyPodio,     setQualyPodio]     = useState<string[]>(inicial.qualy_podio     ?? vacio(3));
@@ -99,20 +103,24 @@ export default function FormularioPronostico({
   }
 
   const Orden = ({
-    titulo, valores, setter, opciones, prefijo = 'P',
+    titulo, valores, setter, opciones, prefijo = 'P', bloqueado = false, nota,
   }: {
     titulo: string; valores: string[];
     setter: React.Dispatch<React.SetStateAction<string[]>>;
-    opciones: string[]; prefijo?: string;
+    opciones: string[]; prefijo?: string; bloqueado?: boolean; nota?: string;
   }) => (
-    <div className="tarjeta">
+    <div className="tarjeta" style={bloqueado ? { opacity: 0.55 } : undefined}>
       <label className="suelto">{titulo}</label>
+      {nota && (
+        <p style={{ margin: '0 0 10px', color: 'var(--ambar)', fontSize: 13 }}>{nota}</p>
+      )}
       <div className="rejilla dos">
         {valores.map((valor, i) => (
           <div className="campo" key={i}>
             <span className="marcador">{prefijo}{i + 1}</span>
             <select
               value={valor}
+              disabled={bloqueado}
               aria-label={`${titulo} ${prefijo}${i + 1}`}
               onChange={(e) => cambiar(setter, i, e.target.value)}
             >
@@ -145,10 +153,13 @@ export default function FormularioPronostico({
         </button>
       </div>
 
-      <Orden titulo="Parrilla de clasificación · por equipo" valores={qualyEquipos} setter={setQualyEquipos} opciones={equipos} />
-      <Orden titulo="Podio de clasificación · pilotos" valores={qualyPodio} setter={setQualyPodio} opciones={pilotos} />
-      <Orden titulo="Orden de carrera · por equipo" valores={carreraEquipos} setter={setCarreraEquipos} opciones={equipos} />
-      <Orden titulo="Podio de carrera · pilotos" valores={carreraPodio} setter={setCarreraPodio} opciones={pilotos} />
+      <Orden titulo="Parrilla de clasificación · por equipo" valores={qualyEquipos} setter={setQualyEquipos} opciones={equipos}
+             bloqueado={qualyCorrida || soloLectura}
+             nota={qualyCorrida ? 'La clasificación ya se corrió: no puntúa.' : undefined} />
+      <Orden titulo="Podio de clasificación · pilotos" valores={qualyPodio} setter={setQualyPodio} opciones={pilotos}
+             bloqueado={qualyCorrida || soloLectura} />
+      <Orden titulo="Orden de carrera · por equipo" valores={carreraEquipos} setter={setCarreraEquipos} opciones={equipos} bloqueado={soloLectura} />
+      <Orden titulo="Podio de carrera · pilotos" valores={carreraPodio} setter={setCarreraPodio} opciones={pilotos} bloqueado={soloLectura} />
 
       <>
           <div className="tarjeta">
@@ -198,9 +209,16 @@ export default function FormularioPronostico({
           </div>
       </>
 
-      <button className="boton" onClick={enviar} disabled={pendiente}>
-        {pendiente ? 'Guardando…' : 'Guardar pronóstico'}
-      </button>
+      {soloLectura ? (
+        <div className="aviso">
+          El cierre pasó y ya mandaste el tuyo, así que no se puede editar. Lo único que lo
+          cambia ahora es el comodín Cambio, aquí abajo.
+        </div>
+      ) : (
+        <button className="boton" onClick={enviar} disabled={pendiente}>
+          {pendiente ? 'Guardando…' : 'Guardar pronóstico'}
+        </button>
+      )}
 
       <div className="tarjeta" style={{ marginTop: 28 }}>
           <label className="suelto">Comodín de la ronda</label>
