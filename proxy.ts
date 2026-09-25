@@ -8,7 +8,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 const url  = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   // Sin configuracion no hay sesion que refrescar, y se deja pasar la
