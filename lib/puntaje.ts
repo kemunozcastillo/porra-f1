@@ -101,7 +101,11 @@ export function puntuarLista(
   oficial: readonly (string | null | undefined)[],
   escala: readonly number[] = ESCALA_GP
 ): { total: number; porPosicion: number[] } {
-  const real = oficial.map(normalizar).filter(Boolean);
+  // Sin compactar: la posición es el índice. Un resultado a medio cargar
+  // -la clasificación en vivo, con sólo las eliminadas de SQ1 y SQ2- deja
+  // huecos delante, y quitarlos corría todas las posiciones. Las casillas
+  // vacías nunca coinciden, porque `clave` vacía ya devuelve 0 arriba.
+  const real = oficial.map(normalizar);
   const porPosicion = pronostico.map((elegido, indice) => {
     const clave = normalizar(elegido);
     if (!clave) return 0;
