@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { clienteServidor, clienteAdmin } from '@/lib/supabase';
 import { recalcularGP, recalcularTemporada } from '@/lib/recalcular';
 import type { Prediccion, Resultado, Sesion } from '@/lib/puntaje';
-import { validarPrediccion, type Catalogos } from '@/lib/prediccion-json';
+import { validarPrediccion, leerPrediccion, type Catalogos } from '@/lib/prediccion-json';
 
 export type TipoComodin = 'boost' | 'boost_ciegas';
 type Respuesta = { ok: boolean; mensaje: string };
@@ -260,12 +260,8 @@ export async function cargarPronosticoIA(
   const no = await soloAdmin();
   if (no) return { ok: false, mensaje: no };
 
-  let bruto: unknown;
-  try {
-    bruto = JSON.parse(textoJson);
-  } catch (e) {
-    return { ok: false, mensaje: 'El texto no es JSON válido.', errores: [String(e)] };
-  }
+  const { datos: bruto, error: errorJson } = leerPrediccion(textoJson);
+  if (errorJson) return { ok: false, mensaje: errorJson };
 
   const { cat, error: errorCat } = await catalogos();
   if (!cat) return { ok: false, mensaje: errorCat! };

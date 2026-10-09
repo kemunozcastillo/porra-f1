@@ -94,7 +94,8 @@ export default function CargarPronosticoIA({ gps, ias, catalogos }: Props) {
       <div className="tarjeta">
         <label className="suelto" htmlFor="ia-json">2 · Lo que te devolvió</label>
         <p style={{ color: 'var(--tenue)', fontSize: 14, margin: '0 0 12px' }}>
-          Pega el JSON tal cual. Acentos y mayúsculas se corrigen solos.
+          Pega el JSON tal cual. Comillas curvas, bloques de código, acentos y
+          mayúsculas se corrigen solos.
         </p>
         <textarea id="ia-json" value={texto} rows={10}
                   onChange={(e) => { setTexto(e.target.value); setRes(null); }}

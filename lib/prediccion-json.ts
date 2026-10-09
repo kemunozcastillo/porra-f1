@@ -75,6 +75,36 @@ export function plantillaPrediccion(gp: string, cat: Catalogos) {
   };
 }
 
+/**
+ * Lee el texto pegado en el panel y devuelve el objeto.
+ *
+ * Dos cosas rompen un JSON que por lo demás está bien, y las dos llegan
+ * de serie al copiar la respuesta de una IA desde un chat: el bloque de
+ * código que la envuelve, y las comillas tipográficas, que muchas
+ * interfaces ponen al renderizar. `JSON.parse` se para en la primera y
+ * el error que da -«position 1»- no dice nada de lo que pasa.
+ *
+ * Se intenta primero con el texto tal cual, así que un JSON válido no
+ * se toca nunca. Sólo si falla se endereza y se reintenta.
+ */
+export function leerPrediccion(texto: string): { datos?: unknown; error?: string } {
+  const enderezado = texto
+    .trim()
+    .replace(/^```[a-z]*\s*([\s\S]*?)\s*```$/i, '$1')
+    .replace(/[\u201c\u201d\u201e\u201f]/g, '"');
+
+  for (const intento of [texto, enderezado]) {
+    try {
+      return { datos: JSON.parse(intento) };
+    } catch {
+      // Se prueba con el siguiente.
+    }
+  }
+  return {
+    error: 'El texto no es JSON válido. Comprueba que esté completo y que no falte una llave.',
+  };
+}
+
 interface CampoOrdenado {
   clave: 'qualy_equipos' | 'qualy_podio' | 'carrera_equipos' | 'carrera_podio';
   etiqueta: string;
